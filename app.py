@@ -102,7 +102,7 @@ if not st.session_state.logueado:
             st.session_state.usuario = usuario_input
             st.success(f"Bienvenido, {usuario_input} 👋")
             st.session_state.step = 1
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Usuario o contraseña incorrectos.")
     st.stop()  # no mostrar el resto si no está logueado
@@ -113,19 +113,19 @@ if st.sidebar.button("Cerrar sesión"):
     st.session_state.logueado = False
     st.session_state.usuario = ""
     st.session_state.step = 1
-    st.experimental_rerun()
+    st.rerun()
 
 # ===========================
 # NAVIGATION Y FUNCIONES DE STEP
 # ===========================
 def go_next():
     st.session_state.step += 1
-    st.experimental_rerun()
+    st.rerun()
 
 def go_back():
     if st.session_state.step > 1:
         st.session_state.step -= 1
-        st.experimental_rerun()
+        st.rerun()
 
 # Layout principal por pasos
 st.write("---")
@@ -162,7 +162,8 @@ elif st.session_state.step == 2:
         seleccionado_text = "✅ Seleccionado" if st.session_state.categoria == opt else ""
         if col.button(f"{opt}\n{seleccionado_text}", key=f"cat_{i}"):
             st.session_state.categoria = opt
-            st.experimental_rerun()
+            st.rerun()
+
 
     st.write(f"**Seleccionado:** {st.session_state.categoria if st.session_state.categoria else 'Nada seleccionado todavía'}")
     btns = st.columns(3)
@@ -379,7 +380,8 @@ elif st.session_state.step == 5:
         st.session_state.organolepticos = []
         st.session_state.prompt_custom = ""
         st.session_state.resultado_ai = ""
-        st.experimental_rerun()
+        st.rerun()
+
 
 # ===========================
 # FOOTER: Ver historial (opcional)
