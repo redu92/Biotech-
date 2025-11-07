@@ -230,8 +230,8 @@ elif st.session_state.paso == 6:
     col2.metric("Peso total", "100 g")
     col3.metric("Porciones", "28")
     col4.metric("Tamaño por porción", "3.5 g")
-    
-     st.subheader("Fórmula (simulada)")
+
+    st.subheader("Fórmula (simulada)")
     # Si integras OpenAI, mostrarás la respuesta real aquí. Por ahora mostramos un texto placeholder.
     st.info("Fórmula generada con los ingredientes seleccionados (simulada). Si configuras OpenAI, aquí aparecerá la respuesta real.")
 
