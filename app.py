@@ -4,6 +4,14 @@ import sqlite3
 from datetime import datetime
 import pandas as pd
 
+# -------------------------------------------------
+# Inicializar variables de sesión
+# -------------------------------------------------
+if "paso" not in st.session_state:
+    st.session_state.paso = 1
+
+if "usuario" not in st.session_state:
+    st.session_state.usuario = None
 # ===========================
 # CONFIG
 # ===========================
