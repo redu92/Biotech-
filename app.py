@@ -230,6 +230,28 @@ elif st.session_state.paso == 6:
     col2.metric("Peso total", "100 g")
     col3.metric("Porciones", "28")
     col4.metric("Tamaño por porción", "3.5 g")
+    
+     st.subheader("Fórmula (simulada)")
+    # Si integras OpenAI, mostrarás la respuesta real aquí. Por ahora mostramos un texto placeholder.
+    st.info("Fórmula generada con los ingredientes seleccionados (simulada). Si configuras OpenAI, aquí aparecerá la respuesta real.")
+
+    st.subheader("Tabla nutricional estimada (por 100 g y porción de 3.5 g)")
+    st.table({
+        "Nutriente": ["Valor energético (kcal)", "Grasas totales (g)", "Grasas saturadas (g)", "Grasas trans (g)", "Sodio (mg)", "Carbohidratos totales (g)", "Azúcares (g)", "Proteína (g)"],
+        "Por 100 g": [400, 12, 3, 0, 50, 45, 20, 25],
+        "Por porción (3.5 g)": [14, 0.4, 0.1, 0, 1.8, 1.6, 0.7, 0.9],
+    })
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🔁 Volver al inicio"):
+            reset_pasos()
+            st.rerun()
+    with col2:
+        if st.button("Cerrar sesión"):
+            reset_pasos()
+            st.session_state.usuario = None
+            st.rerun()
 
 
 
