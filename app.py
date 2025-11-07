@@ -175,77 +175,77 @@ elif st.session_state.step == 2:
         else:
             go_next()
 
-# ---------------------------
-# Paso 3: Selección de ingredientes (multiselección)
-# ---------------------------
-elif st.session_state.step == 3:
-    st.subheader("Paso 3 — Selección de ingredientes (marque una o más opciones)")
+# -------------------------------
+# PASO 3: Selección de ingredientes
+# -------------------------------
+if st.session_state.paso >= 3:
+    st.header("Paso 3️⃣: Selección de ingredientes")
 
-    st.markdown("**Macronutrientes — Proteínas**")
-    prot = {
-        "Aislado de Arberja": False,
-        "Aislado de suero de leche": False,
-        "Proteína de arroz": False
-    }
-    cols = st.columns(3)
-    for i,(k,v) in enumerate(prot.items()):
-        checked = st.checkbox(k, value=(k in st.session_state.ingredientes))
-        if checked and k not in st.session_state.ingredientes:
-            st.session_state.ingredientes.append(k)
-        if not checked and k in st.session_state.ingredientes:
-            st.session_state.ingredientes.remove(k)
+    st.subheader("Macronutrientes")
+    st.write("**Proteínas:**")
+    proteinas = st.multiselect(
+        "",
+        ["Aislado de arveja", "Aislado de suero de leche", "Proteína de arroz"],
+        key="proteinas",
+    )
 
-    st.markdown("**Macronutrientes — Carbohidratos**")
-    carbs = ["Maca", "Quinua", "Cañihua", "Tarwi", "Acelga", "Chia", "Linaza"]
-    for k in carbs:
-        checked = st.checkbox(k, value=(k in st.session_state.ingredientes))
-        if checked and k not in st.session_state.ingredientes:
-            st.session_state.ingredientes.append(k)
-        if not checked and k in st.session_state.ingredientes:
-            st.session_state.ingredientes.remove(k)
+    st.write("**Carbohidratos:**")
+    carbos = st.multiselect(
+        "",
+        ["Maca", "Quinua", "Cañihua", "Tarwi", "Acelga", "Chía", "Linaza"],
+        key="carbohidratos",
+    )
 
-    st.markdown("**Macronutrientes — Grasas**")
-    fats = ["Aceite de coco", "Aceite de girasol", "Sachi Inchi", "Linaza", "Chia", "Aguacate", "Oliva", "Cáñamo"]
-    for k in fats:
-        checked = st.checkbox(k, value=(k in st.session_state.ingredientes))
-        if checked and k not in st.session_state.ingredientes:
-            st.session_state.ingredientes.append(k)
-        if not checked and k in st.session_state.ingredientes:
-            st.session_state.ingredientes.remove(k)
+    st.write("**Grasas:**")
+    grasas = st.multiselect(
+        "",
+        [
+            "Aceite de coco",
+            "Aceite de girasol",
+            "Sacha inchi",
+            "Linaza",
+            "Chía",
+            "Aguacate",
+            "Oliva",
+            "Cañamo",
+        ],
+        key="grasas",
+    )
 
-    st.markdown("**Vitaminas**")
-    vitamins = ["Vitamina A", "Vitamina B1", "Vitamina B2", "Vitamina B3"]
-    for k in vitamins:
-        checked = st.checkbox(k, value=(k in st.session_state.ingredientes))
-        if checked and k not in st.session_state.ingredientes:
-            st.session_state.ingredientes.append(k)
-        if not checked and k in st.session_state.ingredientes:
-            st.session_state.ingredientes.remove(k)
+    st.subheader("Micronutrientes y probióticos")
+    st.write("**Vitaminas:**")
+    vitaminas = st.multiselect(
+        "",
+        ["Vitamina A", "Vitamina B1", "Vitamina B2", "Vitamina B3"],
+        key="vitaminas",
+    )
 
-    st.markdown("**Minerales**")
-    minerals = ["Calcio", "Hierro", "Magnesio", "Fósforo", "Potasio", "Sodio", "Zinc", "Yodo", "Selenio", "Cobre"]
-    for k in minerals:
-        checked = st.checkbox(k, value=(k in st.session_state.ingredientes))
-        if checked and k not in st.session_state.ingredientes:
-            st.session_state.ingredientes.append(k)
-        if not checked and k in st.session_state.ingredientes:
-            st.session_state.ingredientes.remove(k)
+    st.write("**Minerales:**")
+    minerales = st.multiselect(
+        "",
+        [
+            "Calcio",
+            "Hierro",
+            "Magnesio",
+            "Fósforo",
+            "Potasio",
+            "Sodio",
+            "Zinc",
+            "Yodo",
+            "Selenio",
+            "Cobre",
+        ],
+        key="minerales",
+    )
 
-    st.write("**Ingredientes seleccionados:**")
-    if st.session_state.ingredientes:
-        st.write(", ".join(st.session_state.ingredientes))
-    else:
-        st.info("No hay ingredientes seleccionados aún.")
+    col1, col2 = st.columns(2)
+    if col1.button("← Atrás", key="p3_back"):
+        st.session_state.paso = 2
+        st.rerun()
+    if col2.button("Siguiente →", key="p3_next"):
+        st.session_state.paso = 4
+        st.rerun()
 
-    btns = st.columns(3)
-    if btns[0].button("Atrás"):
-        go_back()
-    if btns[2].button("Siguiente"):
-        # puedes requerir al menos 1 ingrediente si quieres
-        if not st.session_state.ingredientes:
-            st.error("Selecciona al menos un ingrediente para continuar.")
-        else:
-            go_next()
 
 # ---------------------------
 # Paso 4: Parametros organolepticos (multiselección)
