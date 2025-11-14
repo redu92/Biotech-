@@ -244,7 +244,7 @@ if st.session_state.paso == 4:
                 temperature=0.3
             )
 
-            st.session_state.ai_response = response.choices[0].message["content"]
+           st.session_state.ai_response = response.choices[0].message.content
             st.session_state.paso = 5
 
         except Exception as e:
