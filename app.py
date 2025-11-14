@@ -187,7 +187,7 @@ def call_ai(prompt_input):
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
         response = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.1-70b-versatile",
             messages=[
                 {"role": "system", "content": "Eres un experto en formulación de alimentos."},
                 {"role": "user", "content": prompt_input}
