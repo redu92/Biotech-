@@ -220,14 +220,20 @@ if st.session_state.paso == 4:
         f"Devuelve una formulación, costos estimados y una tabla nutricional clara."
     )
 
-    prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt)
+    if "prompt_openai" not in st.session_state:
+        st.session_state.prompt_openai = default_prompt
+
+    st.session_state.prompt_openai = st.text_area(
+        "Prompt enviado a la IA:", 
+        st.session_state.prompt_openai
+    )
 
     def call_openai():
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[{"role": "user", "content": prompt_input}]
+                messages=[{"role": "user", "content": st.session_state.prompt_openai}]
             )
             st.session_state.ai_response = response.choices[0].message.content
             st.session_state.paso = 5
@@ -249,10 +255,10 @@ if st.session_state.paso == 4:
 if st.session_state.paso == 5:
     st.markdown('<p class="step-title">Resultados generados con IA</p>', unsafe_allow_html=True)
 
-    st.write("### Respuesta de la IA:")
-    st.write(st.session_state.ai_response)
+    st.subheader("Respuesta de la IA")
+    st.markdown(st.session_state.get("ai_response", "_No hay respuesta disponible_"))
 
-    st.write("### Parámetros fijos del producto:")
+    st.subheader("Parámetros fijos del producto")
     st.info("""
     - Costo estimado: **8.00 soles**
     - Peso total: **100 g**
