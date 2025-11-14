@@ -243,7 +243,7 @@ if st.session_state.paso == 4:
     if st.button("Generar fórmula integrada con IA"):
         with st.spinner("Generando fórmula..."):
             call_openai()
-        st.rerun()
+        # ---------------- st.rerun()
 
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
     st.stop()
