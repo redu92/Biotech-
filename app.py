@@ -184,30 +184,14 @@ if st.session_state.paso == 3:
         st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 4}))
     st.stop()
     
-# ==============define Groq
-def call_ai(prompt):
-    try:
-        response = client.chat.completions.create(
-            model="llama3.2-90b-versatile",
-            messages=[
-                {"role": "system", "content": "Eres un experto en formulaciones de alimentos balanceados."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=800
-        )
 
-        return response.choices[0].message["content"]
 
-    except Exception as e:
-        st.error(f"Error al llamar a Groq API: {e}")
-        return None
 
 # ============================
 # PASO 4 — PARÁMETROS ORGANOLEPTICOS
 # ============================
 if st.session_state.paso == 4:
-    st.markdown('<p class="step-title">Paso 4: Parámetros organolépticos</p>', unsafe_allow_html=True)
+    st.markdown("## Paso 4: Parámetros organolépticos")
 
     saborizantes = ["Vainilla", "Cacao", "Frutos deshidratados", "Especias", "Menta", "Cítricos", "Café"]
     endulzantes = ["Eritritol (E968)", "Stevia (E960)", "Sucralosa"]
@@ -232,42 +216,67 @@ if st.session_state.paso == 4:
 
     st.session_state.organolepticos = organo
 
-    # Construir prompt final
-    prompt_final = (
-        f"Genera una formulación con todos los ítems seleccionados previamente:\n\n"
+    # Prompt generado automáticamente
+    default_prompt = (
+        f"Genera una formulación nutricional completa usando los siguientes datos:\n\n"
         f"País: {st.session_state.pais}\n"
         f"Categoría: {st.session_state.categoria}\n"
-        f"Ingredientes: {st.session_state.ingredientes}\n"
-        f"Proteína (%): {st.session_state.protein_pct}\n"
-        f"Hierro (%): {st.session_state.iron_pct}\n"
+        f"Ingredientes seleccionados: {st.session_state.ingredientes}\n"
+        f"Proteína requerida (%): {st.session_state.protein_pct}\n"
+        f"Hierro requerido (%): {st.session_state.iron_pct}\n"
         f"Parámetros organolépticos: {st.session_state.organolepticos}\n\n"
-        f"Usa costos promedio y disponibilidad del país seleccionado. "
-        f"Devuelve una formulación, costos estimados y una tabla nutricional clara."
+        f"Usa precios y disponibilidad promedio del país seleccionado.\n"
+        f"Devuelve:\n"
+        f"- Una formulación final (ingredientes + porcentajes)\n"
+        f"- Costo estimado por 100 g\n"
+        f"- Tabla nutricional completa\n"
+        f"- Explicación de por qué se eligieron esos ingredientes"
     )
 
-    st.session_state.prompt_openai = prompt_final
+    prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=300)
 
-    st.markdown("### Prompt a enviar a la IA:")
-    st.text_area("Prompt:", prompt_final, height=250, key="prompt_show")
+    # FUNCIÓN PARA LLAMAR A GROQ
+    def call_ai(prompt):
+        try:
+            client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-    # Botón de generación
-    if st.button("Generar fórmula integrada con IA"):
-        with st.spinner("Generando fórmula con Groq..."):
-            call_ai(prompt_final)
+            response = client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
+                messages=[
+                    {"role": "system", "content": "Eres un experto formulador de alimentos."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.3
+            )
+
+            st.session_state.ai_response = response.choices[0].message.content
+            st.session_state.paso = 5
+
+        except Exception as e:
+            st.error(f"Error al llamar a Groq API:\n\n{str(e)}")
+
+    if st.button("Generar fórmula con IA"):
+        with st.spinner("Generando formulación con Groq..."):
+            call_ai(prompt_input)
 
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
+
     st.stop()
     
 # ============================
 # PASO 5 — RESULTADOS FINALES
 # ============================
 if st.session_state.paso == 5:
-    st.markdown('<p class="step-title">Resultados generados con IA</p>', unsafe_allow_html=True)
+    st.markdown("## Resultados generados con IA")
 
-    st.write("### Respuesta generada por la IA (Groq):")
-    st.write(st.session_state.ai_response)
+    if "ai_response" not in st.session_state or st.session_state.ai_response is None:
+        st.error("No se recibió ninguna respuesta de la IA.")
+    else:
+        st.markdown("### Respuesta detallada de la IA")
+        st.write(st.session_state.ai_response)
 
-    st.write("### Parámetros fijos del producto:")
+    st.markdown("### Parámetros fijos del producto:")
     st.info("""
     - Costo estimado: **8.00 soles**
     - Peso total: **100 g**
@@ -276,4 +285,3 @@ if st.session_state.paso == 5:
     """)
 
     st.button("Volver al inicio", on_click=lambda: st.session_state.update({"paso": 1}))
-
