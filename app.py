@@ -241,7 +241,7 @@ if st.session_state.paso == 4:
             client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
             response = client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model="llama-3.1-70b-specdec",
                 messages=[
                     {"role": "system", "content": "Eres un experto formulador de alimentos."},
                     {"role": "user", "content": prompt}
