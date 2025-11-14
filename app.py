@@ -3,8 +3,7 @@ import os
 from openai import OpenAI
 from groq import Groq
 import os
-for m in models.data:
-    print(m.id)
+
 # Inicializar cliente Groq
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -264,6 +263,11 @@ if st.session_state.paso == 4:
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
 
     st.stop()
+
+models = client.models.list()
+
+for m in models.data:
+    print(m.id)
     
 # ============================
 # PASO 5 — RESULTADOS FINALES
