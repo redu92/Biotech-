@@ -236,12 +236,12 @@ if st.session_state.paso == 4:
     prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=300)
 
     # FUNCIÓN PARA LLAMAR A GROQ
-   def call_ai(prompt):
+def call_ai(prompt):
     try:
         client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",  # Modelo válido en tu cuenta
+            model="llama-3.3-70b-versatile",
             messages=[
                 {"role": "system", "content": "Eres un experto formulador de alimentos."},
                 {"role": "user", "content": prompt}
