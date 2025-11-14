@@ -182,25 +182,23 @@ if st.session_state.paso == 3:
     st.stop()
     
 # ==============define Groq
-def call_ai(prompt_input):
+def call_ai(prompt):
     try:
-        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama3.2-90b-versatile",
             messages=[
-                {"role": "system", "content": "Eres un experto en formulación de alimentos."},
-                {"role": "user", "content": prompt_input}
-            ]
+                {"role": "system", "content": "Eres un experto en formulaciones de alimentos balanceados."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3,
+            max_tokens=800
         )
 
-        # Guardar la respuesta en la sesión
-        st.session_state.ai_response = response.choices[0].message.content
-        st.session_state.paso = 5
+        return response.choices[0].message["content"]
 
     except Exception as e:
-        st.error("❌ Error al llamar a Groq API")
-        st.exception(e)
+        st.error(f"Error al llamar a Groq API: {e}")
+        return None
 
 # ============================
 # PASO 4 — PARÁMETROS ORGANOLEPTICOS
