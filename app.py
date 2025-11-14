@@ -230,30 +230,32 @@ if st.session_state.paso == 4:
 
     prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=300)
 
-    def call_ai(prompt):
-        try:
-            client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+  def call_ai(prompt):
+    try:
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-            response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",
-                messages=[
-                    {"role": "system", "content": "Eres un experto formulador de alimentos."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=1500,
-                temperature=0.3
-            )
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "Eres un experto formulador de alimentos."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=1500,
+            temperature=0.3
+        )
 
-           st.session_state.ai_response = response.choices[0].message.content
-            st.session_state.paso = 5
+        # Acceso correcto a la respuesta
+        st.session_state.ai_response = response.choices[0].message.content
+        st.session_state.paso = 5
 
-        except Exception as e:
-            st.error(f"Error al llamar a Groq API:\n\n{str(e)}")
+    except Exception as e:
+        st.error(f"Error al llamar a Groq API:\n\n{str(e)}")
 
-    # 🔵 ***ESTE ES EL BOTÓN QUE NO TE APARECÍA***
-    if st.button("Generar fórmula con IA"):
-        with st.spinner("Generando formulación con Groq..."):
-            call_ai(prompt_input)
+
+# Botón que llama a la IA
+if st.button("Generar fórmula con IA"):
+    with st.spinner("Generando formulación con Groq..."):
+        call_ai(prompt_input)
 
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
 
