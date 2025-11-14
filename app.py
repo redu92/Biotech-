@@ -283,13 +283,7 @@ if st.session_state.paso == 5:
         st.markdown("### Respuesta detallada de la IA")
         st.write(st.session_state.ai_response)
 
-    st.markdown("### Parámetros fijos del producto:")
-    st.info("""
-    - Costo estimado: **8.00 soles**
-    - Peso total: **100 g**
-    - Porciones: **28**
-    - Tamaño por porción: **3.5 g**
-    """)
+
 
     if st.button("Volver al inicio"):
         st.session_state.paso = 1
