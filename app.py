@@ -1,7 +1,10 @@
 import streamlit as st
-import openai
 import json
 import pandas as pd
+import openai
+import streamlit as st
+
+st.write("VERSIÓN OPENAI INSTALADA:", openai.__version__)
 
 # -------------------------------
 # CONFIG Y ESTADO INICIAL
