@@ -4,6 +4,9 @@ from openai import OpenAI
 from groq import Groq
 import os
 
+# Inicializar cliente Groq
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
 
 
 # ============================
