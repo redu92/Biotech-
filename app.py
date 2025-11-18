@@ -1,215 +1,129 @@
-import streamlit as st
-from groq import Groq
+# ============================
+#        ESTILO GLOBAL
+# ============================
 
-# ------------------------------
-#   CONFIGURACIÓN DE PÁGINA
-# ------------------------------
-st.set_page_config(
-    page_title="Biotech Prompt Generator",
-    page_icon="🧬",
-    layout="wide"
-)
-
-# ------------------------------
-#   ESTILOS CSS PERSONALIZADOS
-# ------------------------------
-custom_css = """
+st.markdown("""
 <style>
 
-    /* Fondo general */
-    html, body, [class*="stApp"] {
+    /* ======= FUENTES ======= */
+    html, body, [class*="css"]  {
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    /* ======= FONDO GENERAL ======= */
+    body {
         background-color: #5947fd !important;
+        color: white !important;
     }
 
-    /* Títulos y textos */
-    h1, h2, h3, h4, h5, h6, p, label, span, div {
+    .main {
+        background-color: #5947fd !important;
         color: white !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
     }
 
-    /* Selectores (radio-buttons) */
-    div.stRadio > label {
+    /* ======= TÍTULOS ======= */
+    .title {
         color: white !important;
+        font-size: 34px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .step-title {
+        color: white !important;
+        font-size: 28px !important;
         font-weight: 800 !important;
+        margin-top: 20px !important;
+        margin-bottom: 10px !important;
     }
 
-    /* Texto de las opciones */
-    div.stRadio > div[role='radiogroup'] label {
+    .sub {
         color: white !important;
-        font-size: 1.1rem !important;
+        font-size: 22px !important;
         font-weight: 700 !important;
     }
 
-    /* Ocultamos el radio button original */
-    div[role='radiogroup'] > div > div:first-child {
-        visibility: hidden;
-        height: 0px;
-        width: 0px;
+    label, .stRadio label, .stCheckbox label {
+        color: white !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
     }
 
-    /* Reemplazo por cuadrado blanco */
-    div[role='radiogroup'] > div {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    div[role='radiogroup'] > div:before {
-        content: "";
-        height: 20px;
-        width: 20px;
-        border-radius: 4px;
-        background-color: white;
-        border: 2px solid white;
-        display: inline-block;
-    }
-
-    /* Cuando está seleccionado → aparece check azul */
-    div[role='radiogroup'] > div[aria-checked="true"]:before {
-        background-color: #ffffff;
-        background-image: url('https://upload.wikimedia.org/wikipedia/commons/2/27/White_check.svg');
-        background-size: 20px 20px;
-        background-repeat: no-repeat;
-        background-position: center;
-        border: 2px solid #00aaff;
-    }
-
-    /* Botones */
+    /* ======= BOTONES ======= */
     .stButton>button {
         background-color: #1d1e1c !important;
         color: white !important;
-        border-radius: 8px;
-        padding: 10px 20px;
-        font-weight: 800;
-        border: 2px solid white;
-        font-size: 1.1rem;
+        border-radius: 8px !important;
+        padding: 10px 20px !important;
+        font-size: 18px !important;
+        font-weight: 700 !important;
+        border: 2px solid white !important;
     }
 
-    /* Caja de texto */
-    textarea, input {
+    .stButton>button:hover {
+        background-color: white !important;
+        color: #1d1e1c !important;
+        border: 2px solid #1d1e1c !important;
+    }
+
+    /* ======= INPUTS ======= */
+    .stTextInput input, .stNumberInput input, textarea {
         background-color: #1d1e1c !important;
         color: white !important;
-        font-weight: 600 !important;
-        border: 2px solid #ffffff !important;
+        border-radius: 8px !important;
+        border: 2px solid white !important;
+    }
+
+    /* ======= CHECKBOX Y RADIO ESTILIZADOS ======= */
+    /* Ocultamos el input original */
+    input[type="checkbox"], input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    /* Estilo general del contenedor */
+    .stCheckbox, .stRadio {
+        padding: 6px 0px;
+    }
+
+    /* Cuadrado blanco */
+    .stCheckbox label::before, .stRadio label::before {
+        content: "";
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        border: 2px solid white;
+        background-color: white;
+        border-radius: 4px;
+        vertical-align: middle;
+    }
+
+    /* Check azul cuando está seleccionado */
+    input[type="checkbox"]:checked + label::before,
+    input[type="radio"]:checked + label::before {
+        background-color: #5947fd !important;
+        border: 2px solid white !important;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='white' viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'><path d='M12.97 4.97a.75.75 0 0 0-1.06-1.06L6.5 9.31 4.09 6.91a.75.75 0 1 0-1.06 1.06l3 3a.75.75 0 0 0 1.06 0l6-6z'/></svg>");
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    /* ======= LOGO EN CABECERA ======= */
+    .header-logo {
+        width: 180px;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+        margin-bottom: 20px;
     }
 
 </style>
-"""
-
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# ------------------------------
-#   LOGO DEL GITHUB
-# ------------------------------
-logo_url = "https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg"
-
-st.image(logo_url, width=180)
-st.title("Generador de Prompts - Biotech 🧬")
+""", unsafe_allow_html=True)
 
 
-# ------------------------------
-#   FUNCIÓN PARA CONSULTAR GROQ
-# ------------------------------
-def call_ai(prompt):
-    try:
-        client = Groq(api_key=st.session_state["api_key"])
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=500
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"❌ Error al llamar a Groq API:\n\n{e}"
-
-
-# ------------------------------
-#   VARIABLES DE SESIÓN
-# ------------------------------
-if "api_key" not in st.session_state:
-    st.session_state.api_key = ""
-
-if "step" not in st.session_state:
-    st.session_state.step = 1
-
-if "category" not in st.session_state:
-    st.session_state.category = None
-
-if "final_prompt" not in st.session_state:
-    st.session_state.final_prompt = ""
-
-
-# ------------------------------
-#           PASO 1
-# ------------------------------
-if st.session_state.step == 1:
-    st.subheader("🔑 Ingresa tu API Key de Groq")
-    st.session_state.api_key = st.text_input("API Key:", type="password")
-
-    if st.button("Continuar ➜"):
-        if st.session_state.api_key.strip() == "":
-            st.error("Debe ingresar una API Key válida.")
-        else:
-            st.session_state.step = 2
-            st.rerun()
-
-
-# ------------------------------
-#           PASO 2
-# ------------------------------
-elif st.session_state.step == 2:
-    st.subheader("📌 Selecciona la categoría del prompt")
-
-    categories = [
-        "🍎 Alimentación",
-        "🌱 Agricultura",
-        "🧪 Biotecnología",
-        "🌾 Cultivos",
-        "📊 Estadísticas",
-        "📷 Generación de Imágenes",
-    ]
-
-    st.session_state.category = st.radio("Selecciona una opción:", categories)
-
-    if st.button("Continuar ➜"):
-        st.session_state.step = 3
-        st.rerun()
-
-
-# ------------------------------
-#           PASO 3
-# ------------------------------
-elif st.session_state.step == 3:
-    st.subheader("✍️ Describe brevemente qué deseas crear")
-
-    user_input = st.text_area("Escribe tu idea aquí:", height=150)
-
-    if st.button("Generar Prompt"):
-        if user_input.strip() == "":
-            st.error("Debe ingresar una descripción.")
-        else:
-            full_prompt = (
-                f"Genera un prompt altamente optimizado para IA, claro, profesional y detallado. "
-                f"La categoría es: {st.session_state.category}. "
-                f"Descripción del usuario: {user_input}"
-            )
-
-            st.session_state.final_prompt = call_ai(full_prompt)
-            st.session_state.step = 4
-            st.rerun()
-
-
-# ------------------------------
-#           PASO 4 — Resultado
-# ------------------------------
-elif st.session_state.step == 4:
-    st.subheader("🎉 Tu prompt está listo")
-
-    st.text_area("Prompt generado:", st.session_state.final_prompt, height=250)
-
-    st.success("¡Prompt generado con éxito!")
-
-    if st.button("Generar otro prompt"):
-        st.session_state.step = 2
-        st.rerun()
+# ======= LOGO SUPERIOR (APARECE EN TODAS LAS PÁGINAS) =======
+st.image("https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg",
+         use_container_width=False,
+         width=180)
