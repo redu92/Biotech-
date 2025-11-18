@@ -4,56 +4,68 @@ from groq import Groq
 import streamlit as st
 
 # ============================
-#      ESTILOS GLOBALes
+#      ESTILOS GLOBALES
 # ============================
-PRIMARY_COLOR = "#5947fd"     # Morado
-DARK_COLOR = "#1d1e1c"        # Negro grisáceo
+
+PRIMARY_COLOR = "#5947fd"     # Azul/morado corporativo
+DARK_COLOR = "#1d1e1c"        # Negro/gris oscuro
 TEXT_COLOR = "white"
 
 st.markdown(
     f"""
     <style>
-        /* Fondo general */
-        .main {{
-            background-color: {PRIMARY_COLOR};
-        }}
 
-        /* Texto blanco general */
-        body, p, div, label, span, h1, h2, h3, h4 {{
+        /* ---------- FONDO TOTAL DE LA APP ---------- */
+        html, body, .main, .block-container {{
+            background-color: {PRIMARY_COLOR} !important;
             color: {TEXT_COLOR} !important;
         }}
 
-        /* Inputs */
+        /* ---------- TEXTO GENERAL EN BLANCO ---------- */
+        body, p, div, label, span, h1, h2, h3, h4, h5, h6 {{
+            color: {TEXT_COLOR} !important;
+        }}
+
+        /* ---------- INPUTS, SELECTS Y TEXTAREAS ---------- */
         .stTextInput > div > div > input,
         .stTextArea textarea,
-        .stSelectbox div div div {{
-            background-color: {DARK_COLOR};
+        .stSelectbox div div div,
+        .stNumberInput input {{
+            background-color: {DARK_COLOR} !important;
             color: white !important;
             border-radius: 8px;
+            border: 1px solid white;
         }}
 
-        /* Checkboxes */
+        /* ---------- CHECKBOXES EN AZUL ---------- */
+        input[type="checkbox"] {{
+            accent-color: {PRIMARY_COLOR} !important;
+            width: 18px;
+            height: 18px;
+        }}
+
         .stCheckbox label {{
             color: {TEXT_COLOR} !important;
+            font-size: 16px;
         }}
 
-        /* Botones personalizados */
+        /* ---------- BOTONES ---------- */
         .stButton > button {{
-            background-color: {DARK_COLOR};
-            color: white;
+            background-color: {DARK_COLOR} !important;
+            color: white !important;
             border-radius: 10px;
             padding: 0.6rem 1rem;
             font-weight: bold;
-            border: 2px solid white;
+            border: 2px solid white !important;
         }}
 
         .stButton > button:hover {{
-            background-color: white;
-            color: {PRIMARY_COLOR};
-            border: 2px solid {PRIMARY_COLOR};
+            background-color: white !important;
+            color: {PRIMARY_COLOR} !important;
+            border: 2px solid {PRIMARY_COLOR} !important;
         }}
 
-        /* Cabecera fija */
+        /* ---------- CABECERA FIJA ---------- */
         .header-container {{
             width: 100%;
             display: flex;
@@ -76,6 +88,7 @@ st.markdown(
         img.header-logo {{
             height: 60px;
         }}
+
     </style>
     """,
     unsafe_allow_html=True
@@ -84,7 +97,6 @@ st.markdown(
 # CABECERA DE LA APLICACIÓN
 # ============================
 
-# Ruta del logo en tu GitHub público
 logo_url = "https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg"
 
 st.markdown(
