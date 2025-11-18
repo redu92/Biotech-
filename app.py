@@ -25,24 +25,42 @@ st.markdown("""
     ============================*/
     * {
         color: #ffffff !important;
-        font-weight: 700 !important; /* Bold */
+        font-weight: 700 !important;
     }
 
     /* ============================
-       ESTILOS DE INPUTS
-       (Se mantienen negros por contraste)
+       INPUTS (texto negro)
+       Se usa !important para sobrescribir lo global
     ============================*/
     input, textarea, select, div[role="textbox"] {
         color: #000000 !important;
-        font-weight: 600 !important;
         background-color: #ffffff !important;
+        font-weight: 600 !important;
         border-radius: 8px !important;
     }
 
-    /* Radio buttons y checkboxes (texto) */
-    .st-bw, .st-c3, label {
+    /* ============================
+       SELECTBOX (MENÚ DESPLEGABLE)
+       Opciones internas → negro
+    ============================*/
+    div[data-baseweb="select"] * {
+        color: #000000 !important;
+        font-weight: 600 !important;
+    }
+
+    /* PERO: el texto del select cerrado es blanco */
+    div[data-baseweb="select"] > div {
         color: #ffffff !important;
-        font-weight: 700 !important;
+        background-color: #5947fd !important;
+    }
+
+    /* ============================
+       TEXT AREA DEL PROMPT (negro)
+    ============================*/
+    textarea {
+        color: #000000 !important;
+        background-color: white !important;
+        font-weight: 600 !important;
     }
 
     /* ============================
@@ -52,11 +70,9 @@ st.markdown("""
         background-color: #ffffff00 !important;
         border: 2px solid #ffffff !important;
     }
-
     div[data-baseweb="checkbox"] svg {
         fill: #00a0ff !important;
     }
-
     div[data-baseweb="radio"] svg {
         fill: #00a0ff !important;
     }
@@ -72,7 +88,6 @@ st.markdown("""
         padding: 10px 18px !important;
         border: none !important;
     }
-
     .stButton button:hover {
         background-color: #000000 !important;
         transform: scale(1.02);
@@ -91,21 +106,18 @@ st.markdown("""
         margin-bottom: 25px;
         border: 2px solid white;
     }
-
     .header-logo {
         height: 70px;
         border-radius: 8px;
     }
-
     .header-title {
         font-size: 32px;
-        font-weight: 900;
-        color: white;
+        font-weight: 900 !important;
+        color: white !important;
     }
 
 </style>
 """, unsafe_allow_html=True)
-
 
 # ==========================================
 #  HEADER CON LOGO — SIEMPRE VISIBLE
