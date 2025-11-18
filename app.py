@@ -1,7 +1,101 @@
 import streamlit as st
 import os
 from groq import Groq
+import streamlit as st
 
+# ============================
+#      ESTILOS GLOBALes
+# ============================
+PRIMARY_COLOR = "#5947fd"     # Morado
+DARK_COLOR = "#1d1e1c"        # Negro grisáceo
+TEXT_COLOR = "white"
+
+st.markdown(
+    f"""
+    <style>
+        /* Fondo general */
+        .main {{
+            background-color: {PRIMARY_COLOR};
+        }}
+
+        /* Texto blanco general */
+        body, p, div, label, span, h1, h2, h3, h4 {{
+            color: {TEXT_COLOR} !important;
+        }}
+
+        /* Inputs */
+        .stTextInput > div > div > input,
+        .stTextArea textarea,
+        .stSelectbox div div div {{
+            background-color: {DARK_COLOR};
+            color: white !important;
+            border-radius: 8px;
+        }}
+
+        /* Checkboxes */
+        .stCheckbox label {{
+            color: {TEXT_COLOR} !important;
+        }}
+
+        /* Botones personalizados */
+        .stButton > button {{
+            background-color: {DARK_COLOR};
+            color: white;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-weight: bold;
+            border: 2px solid white;
+        }}
+
+        .stButton > button:hover {{
+            background-color: white;
+            color: {PRIMARY_COLOR};
+            border: 2px solid {PRIMARY_COLOR};
+        }}
+
+        /* Cabecera fija */
+        .header-container {{
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background-color: {PRIMARY_COLOR};
+            border-bottom: 3px solid {DARK_COLOR};
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }}
+
+        .header-title {{
+            font-size: 28px;
+            font-weight: 700;
+            color: white !important;
+        }}
+
+        img.header-logo {{
+            height: 60px;
+        }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+# ============================
+# CABECERA DE LA APLICACIÓN
+# ============================
+
+# Ruta del logo en tu GitHub público
+logo_url = "https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg"
+
+st.markdown(
+    f"""
+    <div class="header-container">
+        <img src="{logo_url}" class="header-logo">
+        <span class="header-title">Biotech — Formulador Nutricional</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 # ============================
 #   CONFIGURACIÓN GENERAL
 # ============================
