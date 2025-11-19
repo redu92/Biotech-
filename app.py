@@ -158,6 +158,29 @@ div[data-baseweb="menu"] {
 div[data-baseweb="menu"] * {
     color: #000000 !important;
 }
+
+/* ======================================================
+   SOLUCIÓN DEFINITIVA PARA QUE LAS OPCIONES SEAN NEGRAS
+   Fuerza que las opciones internas del selectbox sean negras
+   incluso cuando Streamlit renderiza <option> nativo.
+====================================================== */
+
+.stSelectbox option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Si Streamlit usa BaseWeb (menú avanzado) */
+[data-baseweb="select"] [role="option"] {
+    color: #000000 !important;
+}
+[data-baseweb="menu"] {
+    background-color: #ffffff !important;
+}
+[data-baseweb="menu"] * {
+    color: #000000 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
