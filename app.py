@@ -212,6 +212,31 @@ div[data-baseweb="menu"] * {
 body [data-baseweb="menu"] * {
     color: #000000 !important;
 }
+
+/* ============================================
+   FIX DEFINITIVO PARA STREAMLIT SELECTBOX
+   Independentemente de dónde renderice el menú
+   ============================================ */
+
+/* Esto fuerza a que CUALQUIER menú desplegable 
+   que Streamlit ponga en un portal tenga texto negro */
+div[role="listbox"] * {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Opciones individuales */
+div[role="option"] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+}
+
+/* Muy importante: Esto aumenta la especificidad
+   para vencer al selector global (*) que tienes arriba */
+html body div[role="listbox"] * {
+    color: #000000 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
