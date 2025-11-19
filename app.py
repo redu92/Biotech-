@@ -115,6 +115,11 @@ st.markdown("""
         font-weight: 900 !important;
         color: white !important;
     }
+/* CORRECCIÓN: opciones internas del selectbox en negro */
+ul[role="listbox"] li,
+ul[role="listbox"] div {
+    color: #000000 !important;
+}
 
 </style>
 """, unsafe_allow_html=True)
