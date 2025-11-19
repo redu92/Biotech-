@@ -138,7 +138,26 @@ div[data-baseweb="select"] div[role="listbox"] {
 div[data-baseweb="select"] > div {
     color: #ffffff !important;
 }
+/* ============================================
+   FIX DEFINITIVO — OPCIONES DEL DESPLEGABLE EN NEGRO
+   BaseWeb usa data-baseweb="menu" para el menú
+============================================ */
 
+/* Color negro para las opciones del menú */
+div[data-baseweb="menu"] div[role="option"] {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* Fondo blanco del menú */
+div[data-baseweb="menu"] {
+    background-color: #ffffff !important;
+}
+
+/* También fuerza el texto interno del contenedor del menú */
+div[data-baseweb="menu"] * {
+    color: #000000 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
