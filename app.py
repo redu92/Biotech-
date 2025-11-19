@@ -237,6 +237,25 @@ div[role="option"] {
 html body div[role="listbox"] * {
     color: #000000 !important;
 }
+
+/* ============================================
+   FIX REAL PARA TU MENÚ DESPLEGABLE
+   Las opciones del select usan clases Emotion
+============================================ */
+
+.st-emotion-cache-qiev7j,
+.st-emotion-cache-qiev7j * {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+/* Opciones del menú desplegable con estilos negros */
+div[role="dialog"] div[class*="st-emotion-cache"] {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
