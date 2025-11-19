@@ -123,6 +123,22 @@ ul[role="listbox"] div {
     color: #000000 !important;
 }
 
+/* FORZAR color negro SOLO dentro del menú desplegable de opciones */
+div[data-baseweb="select"] div[role="listbox"] div[role="option"] {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Fondo blanco de las opciones (para asegurarlo) */
+div[data-baseweb="select"] div[role="listbox"] {
+    background-color: #ffffff !important;
+}
+
+/* El texto cuando el select está cerrado debe seguir siendo blanco */
+div[data-baseweb="select"] > div {
+    color: #ffffff !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
