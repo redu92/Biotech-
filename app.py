@@ -181,6 +181,37 @@ div[data-baseweb="menu"] * {
 [data-baseweb="menu"] * {
     color: #000000 !important;
 }
+
+/* ============================================
+   FIX FINAL — OPCIONES DEL SELECT EN COLOR NEGRO
+   ============================================ */
+
+/* Menú desplegable BaseWeb (el más común en Streamlit) */
+[data-baseweb="menu"] {
+    background-color: #ffffff !important;
+}
+[data-baseweb="menu"] * {
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* Opciones del menú */
+[data-baseweb="menu"] [role="option"] {
+    color: #000000 !important;
+}
+
+/* Opciones en selects nativos (fallback de Streamlit) */
+.stSelectbox option {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* Para evitar que la regla global (*) re-interfiera,
+   aumentamos especificidad solo en los menús */
+body [data-baseweb="menu"] * {
+    color: #000000 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
