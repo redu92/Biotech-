@@ -29,8 +29,7 @@ st.markdown("""
     }
 
     /* ============================
-       INPUTS (texto negro)
-       Se usa !important para sobrescribir lo global
+       INPUTS Y TEXTAREAS (texto negro)
     ============================*/
     input, textarea, select, div[role="textbox"] {
         color: #000000 !important;
@@ -40,39 +39,21 @@ st.markdown("""
     }
 
     /* ============================
-       SELECTBOX (MENÚ DESPLEGABLE)
-       Opciones internas → negro
+       SELECTBOX — texto del select cerrado
     ============================*/
-    div[data-baseweb="select"] * {
-        color: #000000 !important;
-        font-weight: 600 !important;
-    }
-
-    /* PERO: el texto del select cerrado es blanco */
     div[data-baseweb="select"] > div {
         color: #ffffff !important;
         background-color: #5947fd !important;
     }
 
     /* ============================
-       TEXT AREA DEL PROMPT (negro)
-    ============================*/
-    textarea {
-        color: #000000 !important;
-        background-color: white !important;
-        font-weight: 600 !important;
-    }
-
-    /* ============================
-       CHECKBOX Y RADIO — color azul
+       CHECKBOX Y RADIO
     ============================*/
     div[data-baseweb="checkbox"] > div {
-        background-color: #ffffff00 !important;
+        background-color: transparent !important;
         border: 2px solid #ffffff !important;
     }
-    div[data-baseweb="checkbox"] svg {
-        fill: #00a0ff !important;
-    }
+    div[data-baseweb="checkbox"] svg,
     div[data-baseweb="radio"] svg {
         fill: #00a0ff !important;
     }
@@ -115,150 +96,29 @@ st.markdown("""
         font-weight: 900 !important;
         color: white !important;
     }
-    
-/* CORRECCIÓN: opciones internas del selectbox en negro */
 
-ul[role="listbox"] li,
-ul[role="listbox"] div {
-    color: #000000 !important;
-}
+    /* ===================================================
+       FIX REAL Y DEFINITIVO PARA TU MENÚ DESPLEGABLE
+       (Streamlit usa portales + clases Emotion)
+    ====================================================*/
 
-/* FORZAR color negro SOLO dentro del menú desplegable de opciones */
-div[data-baseweb="select"] div[role="listbox"] div[role="option"] {
-    color: #000000 !important;
-    font-weight: 600 !important;
-}
+    /* Opciones reales del menú (clase Emotion detectada) */
+    .st-emotion-cache-qiev7j,
+    .st-emotion-cache-qiev7j * {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: 700 !important;
+    }
 
-/* Fondo blanco de las opciones (para asegurarlo) */
-div[data-baseweb="select"] div[role="listbox"] {
-    background-color: #ffffff !important;
-}
-
-/* El texto cuando el select está cerrado debe seguir siendo blanco */
-div[data-baseweb="select"] > div {
-    color: #ffffff !important;
-}
-/* ============================================
-   FIX DEFINITIVO — OPCIONES DEL DESPLEGABLE EN NEGRO
-   BaseWeb usa data-baseweb="menu" para el menú
-============================================ */
-
-/* Color negro para las opciones del menú */
-div[data-baseweb="menu"] div[role="option"] {
-    color: #000000 !important;
-    font-weight: 700 !important;
-}
-
-/* Fondo blanco del menú */
-div[data-baseweb="menu"] {
-    background-color: #ffffff !important;
-}
-
-/* También fuerza el texto interno del contenedor del menú */
-div[data-baseweb="menu"] * {
-    color: #000000 !important;
-}
-
-/* ======================================================
-   SOLUCIÓN DEFINITIVA PARA QUE LAS OPCIONES SEAN NEGRAS
-   Fuerza que las opciones internas del selectbox sean negras
-   incluso cuando Streamlit renderiza <option> nativo.
-====================================================== */
-
-.stSelectbox option {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-}
-
-/* Si Streamlit usa BaseWeb (menú avanzado) */
-[data-baseweb="select"] [role="option"] {
-    color: #000000 !important;
-}
-[data-baseweb="menu"] {
-    background-color: #ffffff !important;
-}
-[data-baseweb="menu"] * {
-    color: #000000 !important;
-}
-
-/* ============================================
-   FIX FINAL — OPCIONES DEL SELECT EN COLOR NEGRO
-   ============================================ */
-
-/* Menú desplegable BaseWeb (el más común en Streamlit) */
-[data-baseweb="menu"] {
-    background-color: #ffffff !important;
-}
-[data-baseweb="menu"] * {
-    color: #000000 !important;
-    font-weight: 700 !important;
-}
-
-/* Opciones del menú */
-[data-baseweb="menu"] [role="option"] {
-    color: #000000 !important;
-}
-
-/* Opciones en selects nativos (fallback de Streamlit) */
-.stSelectbox option {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-}
-
-/* Para evitar que la regla global (*) re-interfiera,
-   aumentamos especificidad solo en los menús */
-body [data-baseweb="menu"] * {
-    color: #000000 !important;
-}
-
-/* ============================================
-   FIX DEFINITIVO PARA STREAMLIT SELECTBOX
-   Independentemente de dónde renderice el menú
-   ============================================ */
-
-/* Esto fuerza a que CUALQUIER menú desplegable 
-   que Streamlit ponga en un portal tenga texto negro */
-div[role="listbox"] * {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-}
-
-/* Opciones individuales */
-div[role="option"] {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-}
-
-/* Muy importante: Esto aumenta la especificidad
-   para vencer al selector global (*) que tienes arriba */
-html body div[role="listbox"] * {
-    color: #000000 !important;
-}
-
-/* ============================================
-   FIX REAL PARA TU MENÚ DESPLEGABLE
-   Las opciones del select usan clases Emotion
-============================================ */
-
-.st-emotion-cache-qiev7j,
-.st-emotion-cache-qiev7j * {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-}
-/* Opciones del menú desplegable con estilos negros */
-div[role="dialog"] div[class*="st-emotion-cache"] {
-    color: #000000 !important;
-    background-color: #ffffff !important;
-    font-weight: 700 !important;
-}
+    /* Cualquier menú desplegable renderizado en un portal */
+    div[role="dialog"] div[class*="st-emotion-cache"] {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: 700 !important;
+    }
 
 </style>
 """, unsafe_allow_html=True)
-
 # ==========================================
 #  HEADER CON LOGO — SIEMPRE VISIBLE
 # ==========================================
