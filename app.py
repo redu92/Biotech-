@@ -174,7 +174,7 @@ if not st.session_state.logged_in:
     pwd = st.text_input("Contraseña", type="password")
 
     if st.button("Ingresar"):
-        if user == "admin" and pwd == "1234":
+        if user == "admin" and pwd == "Form197@":
             st.session_state.logged_in = True
             st.rerun()
         else:
