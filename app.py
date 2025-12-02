@@ -47,6 +47,13 @@ if "fiber_pct" not in st.session_state:
 if "organolepticos" not in st.session_state:
     st.session_state.organolepticos = []
 
+# NUEVO: porción y costo objetivo
+if "porcion_g" not in st.session_state:
+    st.session_state.porcion_g = 30  # gramos por defecto
+
+if "costo_objetivo_kg" not in st.session_state:
+    st.session_state.costo_objetivo_kg = 0.0
+
 if "ai_response" not in st.session_state:
     st.session_state.ai_response = None
 
@@ -507,6 +514,67 @@ if st.session_state.paso == 4:
 
     st.session_state.organolepticos = organo
 
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
+    with col2:
+        st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 5}))
+    st.stop()
+
+# ============================
+#  PASO 5 — PORCIÓN POR SERVICIO
+# ============================
+if st.session_state.paso == 5:
+    st.header("Paso 5: Colocar la cantidad de porción por servicio")
+
+    st.session_state.porcion_g = st.number_input(
+        "Cantidad de gramos por porción (g):",
+        min_value=1,
+        max_value=500,
+        value=st.session_state.porcion_g,
+        step=1,
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 4}))
+    with col2:
+        st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 6}))
+    st.stop()
+
+# ============================
+#  PASO 6 — COSTO OBJETIVO POR KG
+# ============================
+if st.session_state.paso == 6:
+    st.header("Paso 6: Colocar el costo objetivo por kilogramo de la formulación")
+
+    st.session_state.costo_objetivo_kg = st.number_input(
+        "Costo objetivo por kilogramo de la formulación (S/ por kg):",
+        min_value=0.0,
+        max_value=1000.0,
+        value=float(st.session_state.costo_objetivo_kg),
+        step=0.1,
+        format="%.2f",
+    )
+
+    st.markdown(
+        "Este será el costo máximo objetivo que deberá tener tu formulación. "
+        "La IA deberá priorizar cumplir este costo ajustando los ingredientes."
+    )
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 5}))
+    with col2:
+        st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 7}))
+    st.stop()
+
+# ============================
+# PASO 7 — PROMPT Y RESULTADOS FINALES
+# ============================
+if st.session_state.paso == 7:
+    st.markdown('<p class="step-title">Paso 7: Generar formulación y resultados con IA</p>', unsafe_allow_html=True)
+
     # ------------------------------------
     # Construir texto de costos por ingrediente
     # ------------------------------------
@@ -526,29 +594,58 @@ if st.session_state.paso == 4:
     texto_costos = "\n".join(lineas_costos)
 
     # ------------------------------------
+    # Construir sección de macronutrientes solo si el usuario los definió
+    # ------------------------------------
+    macros_texto = []
+    if st.session_state.protein_pct > 0:
+        macros_texto.append(f"Proteína requerida (%): {st.session_state.protein_pct}")
+    if st.session_state.fat_pct > 0:
+        macros_texto.append(f"Grasas requeridas (%): {st.session_state.fat_pct}")
+    if st.session_state.carb_pct > 0:
+        macros_texto.append(f"Carbohidratos requeridos (%): {st.session_state.carb_pct}")
+    if st.session_state.fiber_pct > 0:
+        macros_texto.append(f"Fibra requerida (%): {st.session_state.fiber_pct}")
+
+    if macros_texto:
+        texto_macros = "\n".join(macros_texto)
+        instruccion_macros = (
+            "Respeta estos porcentajes aproximados de macronutrientes en la formulación.\n"
+        )
+    else:
+        texto_macros = "No se especificaron porcentajes de macronutrientes.\n"
+        instruccion_macros = (
+            "Como no se especificaron porcentajes de proteína, grasas, carbohidratos o fibra, "
+            "propón tú una distribución adecuada de macronutrientes para este tipo de producto.\n"
+        )
+
+    # ------------------------------------
     # Prompt automático para la IA
     # ------------------------------------
     default_prompt = (
         f"Genera una formulación nutricional completa usando los siguientes datos:\n\n"
         f"País objetivo: {st.session_state.pais}\n"
         f"Categoría del producto: {st.session_state.categoria}\n"
-        f"Ingredientes seleccionados: {st.session_state.ingredientes}\n"
-        f"Proteína requerida (%): {st.session_state.protein_pct}\n"
-        f"Grasas requeridas (%): {st.session_state.fat_pct}\n"
-        f"Carbohidratos requeridos (%): {st.session_state.carb_pct}\n"
-        f"Fibra requerida (%): {st.session_state.fiber_pct}\n"
-        f"Parámetros organolépticos (saborizantes y estabilizantes): "
-        f"{st.session_state.organolepticos}\n\n"
-        f"Información de costos (soles por kg):\n"
+        f"Ingredientes seleccionados (procura usarlos todos, salvo que alguno haga imposible cumplir el costo objetivo):\n"
+        f"{st.session_state.ingredientes}\n\n"
+        f"{texto_macros}"
+        f"{instruccion_macros}\n"
+        f"Parámetros organolépticos (saborizantes y estabilizantes): {st.session_state.organolepticos}\n"
+        f"Tamaño de porción objetivo: {st.session_state.porcion_g} g por servicio.\n"
+        f"Costo objetivo de la formulación: {st.session_state.costo_objetivo_kg:.2f} soles/kg (este es el costo MÁXIMO que debes priorizar cumplir).\n\n"
+        f"Información de costos reales o a estimar (soles por kg):\n"
         f"{texto_costos}\n\n"
         f"Si el precio de algún ingrediente está marcado como estimado, "
         f"elige un valor razonable según el mercado actual para {st.session_state.pais}.\n\n"
+        f"Objetivo principal: prioriza que el costo final por kg de la formulación sea menor o igual a "
+        f"{st.session_state.costo_objetivo_kg:.2f} soles/kg. Ajusta las proporciones, especialmente de los ingredientes más caros, "
+        f"para lograrlo sin sacrificar demasiado el perfil nutricional.\n\n"
         f"Con toda esta información, devuelve:\n"
-        f"1) Una formulación final (lista de ingredientes con porcentaje en la mezcla de 100 g).\n"
-        f"2) Un costo total estimado por 100 g y por kg.\n"
-        f"3) Una tabla nutricional aproximada por 100 g.\n"
+        f"1) Una formulación final en forma de tabla (lista de ingredientes con porcentaje en la mezcla para 100 g).\n"
+        f"2) El costo total estimado por 100 g, por porción de {st.session_state.porcion_g} g y por kg.\n"
+        f"3) Una tabla nutricional aproximada por 100 g y por porción de {st.session_state.porcion_g} g.\n"
         f"4) Una breve explicación de por qué seleccionaste esa formulación, "
-        f"teniendo en cuenta costo, disponibilidad y perfil nutricional."
+        f"teniendo en cuenta costo, disponibilidad, perfil nutricional y el costo objetivo.\n"
+        f"5) Si no es posible cumplir exactamente el costo objetivo, indica el costo resultante y explica brevemente por qué."
     )
 
     prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=280)
@@ -569,7 +666,6 @@ if st.session_state.paso == 4:
             )
 
             st.session_state.ai_response = response.choices[0].message.content
-            st.session_state.paso = 5
 
         except Exception as e:
             st.error(f"Error al llamar a la API de OpenAI:\n\n{e}")
@@ -578,19 +674,9 @@ if st.session_state.paso == 4:
         with st.spinner("Generando formulación con IA..."):
             call_ai(prompt_input)
 
-    st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
-    st.stop()
-
-# ============================
-# PASO 5 — RESULTADOS FINALES
-# ============================
-if st.session_state.paso == 5:
-    st.markdown('<p class="step-title">Resultados generados con IA</p>', unsafe_allow_html=True)
-
-    if not st.session_state.ai_response:
-        st.error("No se recibió ninguna respuesta de la IA.")
-    else:
-        st.markdown("### Respuesta detallada de la IA")
+    # Mostrar resultados si existen
+    if st.session_state.ai_response:
+        st.markdown("### Resultados generados por la IA")
         st.write(st.session_state.ai_response)
 
-    st.button("Volver al inicio", on_click=lambda: st.session_state.update({"paso": 1}))
+    st.button("Volver al inicio", on_click=lambda: st.session_state.update({"paso": 1, "ai_response": None}))
