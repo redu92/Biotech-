@@ -50,24 +50,15 @@ if "ai_response" not in st.session_state:
 st.markdown("""
 <style>
 
-    /* ============================
-       COLORES BASE
-    ============================*/
     body, .main, .block-container {
         background-color: #5947fd !important;
     }
 
-    /* ============================
-       TIPOGRAFÍA GENERAL
-    ============================*/
     * {
         color: #ffffff !important;
         font-weight: 700 !important;
     }
 
-    /* ============================
-       INPUTS Y TEXTAREAS (texto negro)
-    ============================*/
     input, textarea, select, div[role="textbox"] {
         color: #000000 !important;
         background-color: #ffffff !important;
@@ -75,17 +66,11 @@ st.markdown("""
         border-radius: 8px !important;
     }
 
-    /* ============================
-       SELECTBOX — texto del select cerrado
-    ============================*/
     div[data-baseweb="select"] > div {
         color: #ffffff !important;
         background-color: #5947fd !important;
     }
 
-    /* ============================
-       CHECKBOX Y RADIO
-    ============================*/
     div[data-baseweb="checkbox"] > div {
         background-color: transparent !important;
         border: 2px solid #ffffff !important;
@@ -95,9 +80,6 @@ st.markdown("""
         fill: #00a0ff !important;
     }
 
-    /* ============================
-       BOTONES
-    ============================*/
     .stButton button {
         background-color: #1d1e1c !important;
         color: white !important;
@@ -111,9 +93,6 @@ st.markdown("""
         transform: scale(1.02);
     }
 
-    /* ============================
-       CABECERA CON LOGO
-    ============================*/
     .header-container {
         display: flex;
         align-items: center;
@@ -134,12 +113,6 @@ st.markdown("""
         color: white !important;
     }
 
-    /* ===================================================
-       FIX REAL Y DEFINITIVO PARA TU MENÚ DESPLEGABLE
-       (Streamlit usa portales + clases Emotion)
-    ====================================================*/
-
-    /* Opciones reales del menú (clase Emotion detectada) */
     .st-emotion-cache-qiev7j,
     .st-emotion-cache-qiev7j * {
         color: #000000 !important;
@@ -147,7 +120,6 @@ st.markdown("""
         font-weight: 700 !important;
     }
 
-    /* Cualquier menú desplegable renderizado en un portal */
     div[role="dialog"] div[class*="st-emotion-cache"] {
         color: #000000 !important;
         background-color: #ffffff !important;
@@ -156,11 +128,12 @@ st.markdown("""
 
 </style>
 """, unsafe_allow_html=True)
+
 # ==========================================
 #  HEADER CON LOGO — SIEMPRE VISIBLE
 # ==========================================
 st.markdown(
-    f"""
+    """
     <div class="header-container">
         <img src="https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg" class="header-logo">
         <div class="header-title">BiotechSuperfood IA</div>
@@ -176,21 +149,27 @@ st.markdown(
 def load_cost_table():
     """
     Lee el Excel de precios de insumos y devuelve
-    solo las columnas que nos interesan.
+    solo las columnas importantes:
     - PROVEEDOR
     - insumos
-    - Costo unitario (S/ por kg)
+    - Costo unitario  (S/ por kg)
     """
-    df = pd.read_excel("Precio de insumos.xlsx", header=1)  # ajusta ruta si está en /data
+    # Asegúrate de que este nombre de archivo exista en tu repo
+    df = pd.read_excel("Precio de insumos.xlsx", header=1)
     df = df[["PROVEEDOR", "insumos", "Costo unitario"]].dropna()
+
     df = df.rename(columns={
         "PROVEEDOR": "proveedor",
         "insumos": "insumo",
         "Costo unitario": "costo_soles_kg"
     })
+
+    # Columna normalizada para buscar por nombre
+    df["insumo_norm"] = df["insumo"].astype(str).str.strip().str.lower()
     return df
 
-cost_df = load_cost_table()
+# DataFrame global de precios
+df_precios = load_cost_table()
 
 # ============================
 #      LOGIN
@@ -256,7 +235,6 @@ if st.session_state.paso == 2:
 if st.session_state.paso == 3:
     st.markdown('<p class="step-title">Paso 3: Selección de ingredientes</p>', unsafe_allow_html=True)
 
-    # --- Proteínas ---
     st.markdown('<p class="sub">Macronutrientes — Proteínas</p>', unsafe_allow_html=True)
     proteinas = ["Aislado de arveja", "Aislado de suero de leche", "Proteína de arroz"]
     seleccion_proteinas = []
@@ -264,7 +242,6 @@ if st.session_state.paso == 3:
         if st.checkbox(p):
             seleccion_proteinas.append(p)
 
-    # Porcentaje de proteína (texto negro ya está cubierto por CSS)
     st.session_state.protein_pct = st.number_input(
         "Porcentaje de proteína (%)",
         min_value=0,
@@ -272,22 +249,18 @@ if st.session_state.paso == 3:
         step=1,
     )
 
-    # --- Carbohidratos ---
     st.markdown('<p class="sub">Macronutrientes — Carbohidratos</p>', unsafe_allow_html=True)
     carbs = ["Maca", "Quinua", "Cañihua", "Tarwi", "Acelga", "Chía", "Linaza"]
     seleccion_carbs = [c for c in carbs if st.checkbox(c, key=f"carb_{c}")]
 
-    # --- Grasas ---
     st.markdown('<p class="sub">Macronutrientes — Grasas</p>', unsafe_allow_html=True)
     grasas = ["Aceite de coco", "Aceite de girasol", "Sacha Inchi", "Linaza", "Chía", "Aguacate", "Oliva", "Cañamo"]
     seleccion_grasas = [g for g in grasas if st.checkbox(g, key=f"grasa_{g}")]
 
-    # --- Vitaminas ---
     st.markdown('<p class="sub">Micronutrientes — Vitaminas</p>', unsafe_allow_html=True)
     vitaminas = ["Vitamina A", "Vitamina B1", "Vitamina B2", "Vitamina B3"]
     seleccion_vit = [v for v in vitaminas if st.checkbox(v, key=f"vit_{v}")]
 
-    # --- Minerales ---
     st.markdown('<p class="sub">Micronutrientes — Minerales</p>', unsafe_allow_html=True)
     minerales = ["Calcio", "Hierro", "Magnesio", "Fósforo", "Potasio", "Sodio", "Zinc", "Yodo", "Selenio", "Cobre"]
     seleccion_min = []
@@ -295,7 +268,6 @@ if st.session_state.paso == 3:
         if st.checkbox(m, key=f"min_{m}"):
             seleccion_min.append(m)
 
-    # Porcentaje de hierro
     st.session_state.iron_pct = st.number_input(
         "Porcentaje de hierro (%)",
         min_value=0,
@@ -315,39 +287,36 @@ if st.session_state.paso == 3:
     st.stop()
 
 # ============================
-#  PASO 4 — PARÁMETROS ORGANOLEPTICOS
+#  FUNCIÓN DE PRECIOS DESDE EXCEL
 # ============================
 def obtener_precio_desde_excel(nombre_ingrediente: str):
     """
-    Devuelve (precio_kg, fuente) donde:
-      - precio_kg es un float en soles/kg si se encontró en el Excel
-      - fuente es 'tabla' si viene del Excel, o 'estimado' si no se encontró
+    Devuelve (precio_kg, fuente):
+      - precio_kg: float (S/ por kg) si se encontró en el Excel
+      - fuente: 'tabla' si viene del Excel, 'estimado' si no se encontró
     """
-    if df_precios is None:
+    if df_precios is None or df_precios.empty:
         return None, "estimado"
 
-    nombre_norm = nombre_ingrediente.strip().lower()
+    nombre_norm = str(nombre_ingrediente).strip().lower()
 
     try:
         coincidencias = df_precios[df_precios["insumo_norm"] == nombre_norm]
     except Exception:
-        # Si por alguna razón falla la búsqueda, mejor seguimos estimando
         return None, "estimado"
 
     if not coincidencias.empty:
-        # Ajusta aquí el nombre de la columna de precio tal cual está en tu Excel
-        # por ejemplo: "costo unitario", "costo_unitario", etc.
-        for col_precio in ["costo unitario", "costo_unitario", "precio", "precio_kg"]:
-            if col_precio in coincidencias.columns:
-                try:
-                    precio = float(coincidencias[col_precio].iloc[0])
-                    return precio, "tabla"
-                except Exception:
-                    pass
+        try:
+            precio = float(coincidencias["costo_soles_kg"].iloc[0])
+            return precio, "tabla"
+        except Exception:
+            return None, "estimado"
 
     return None, "estimado"
 
-
+# ============================
+#  PASO 4 — PARÁMETROS ORGANOLEPTICOS
+# ============================
 if st.session_state.paso == 4:
     st.header("Paso 4: Parámetros organolépticos")
 
@@ -374,10 +343,7 @@ if st.session_state.paso == 4:
 
     st.session_state.organolepticos = organo
 
-    # ------------------------------------
-    # Construir texto de costos por ingrediente
-    # usando primero el Excel, y si no está, pedir estimación
-    # ------------------------------------
+    # ---- texto de costos por ingrediente ----
     lineas_costos = []
     for ing in st.session_state.ingredientes:
         precio, fuente = obtener_precio_desde_excel(ing)
@@ -393,9 +359,7 @@ if st.session_state.paso == 4:
 
     texto_costos = "\n".join(lineas_costos)
 
-    # ------------------------------------
-    # Prompt automático para la IA
-    # ------------------------------------
+    # ---- Prompt automático ----
     default_prompt = (
         f"Genera una formulación nutricional completa usando los siguientes datos:\n\n"
         f"País objetivo: {st.session_state.pais}\n"
@@ -419,14 +383,8 @@ if st.session_state.paso == 4:
 
     prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=280)
 
-    # ---------- llamada a OpenAI (ya la tienes funcionando) ----------
     def call_ai(prompt):
         try:
-            from openai import OpenAI
-            import os
-
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
@@ -449,6 +407,7 @@ if st.session_state.paso == 4:
 
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
     st.stop()
+
 # ============================
 # PASO 5 — RESULTADOS FINALES
 # ============================
