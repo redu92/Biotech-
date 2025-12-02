@@ -236,8 +236,16 @@ if not st.session_state.logged_in:
         user = st.text_input("Usuario")
         pwd = st.text_input("Contraseña", type="password")
 
+        # ------- NUEVO: lista de usuarios permitidos -------
+        usuarios_validos = [
+            "Antony",
+            "Rubenz",   # <- Agrega aquí más usuarios
+        ]
+
+        password_correcta = "Form197@"   # <- Puedes mantener la misma contraseña
+
         if st.button("Ingresar"):
-            if user == "Antonycomercial123@gmail.com" and pwd == "Form197@":
+            if user in usuarios_validos and pwd == password_correcta:
                 st.session_state.logged_in = True
                 st.rerun()
             else:
