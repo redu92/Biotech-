@@ -32,11 +32,18 @@ if "ingredientes" not in st.session_state:
 if "micro_ingredientes" not in st.session_state:
     st.session_state.micro_ingredientes = []
 
+# Porcentajes de macros
 if "protein_pct" not in st.session_state:
     st.session_state.protein_pct = 0
 
-if "iron_pct" not in st.session_state:
-    st.session_state.iron_pct = 0
+if "fat_pct" not in st.session_state:
+    st.session_state.fat_pct = 0
+
+if "carb_pct" not in st.session_state:
+    st.session_state.carb_pct = 0
+
+if "fiber_pct" not in st.session_state:
+    st.session_state.fiber_pct = 0
 
 if "organolepticos" not in st.session_state:
     st.session_state.organolepticos = []
@@ -50,15 +57,24 @@ if "ai_response" not in st.session_state:
 st.markdown("""
 <style>
 
+    /* ============================
+       COLORES BASE
+    ============================*/
     body, .main, .block-container {
         background-color: #5947fd !important;
     }
 
+    /* ============================
+       TIPOGRAFÍA GENERAL
+    ============================*/
     * {
         color: #ffffff !important;
         font-weight: 700 !important;
     }
 
+    /* ============================
+       INPUTS Y TEXTAREAS (texto negro)
+    ============================*/
     input, textarea, select, div[role="textbox"] {
         color: #000000 !important;
         background-color: #ffffff !important;
@@ -66,11 +82,17 @@ st.markdown("""
         border-radius: 8px !important;
     }
 
+    /* ============================
+       SELECTBOX — texto del select cerrado
+    ============================*/
     div[data-baseweb="select"] > div {
         color: #ffffff !important;
         background-color: #5947fd !important;
     }
 
+    /* ============================
+       CHECKBOX Y RADIO
+    ============================*/
     div[data-baseweb="checkbox"] > div {
         background-color: transparent !important;
         border: 2px solid #ffffff !important;
@@ -80,6 +102,9 @@ st.markdown("""
         fill: #00a0ff !important;
     }
 
+    /* ============================
+       BOTONES
+    ============================*/
     .stButton button {
         background-color: #1d1e1c !important;
         color: white !important;
@@ -93,6 +118,9 @@ st.markdown("""
         transform: scale(1.02);
     }
 
+    /* ============================
+       CABECERA CON LOGO
+    ============================*/
     .header-container {
         display: flex;
         align-items: center;
@@ -113,6 +141,9 @@ st.markdown("""
         color: white !important;
     }
 
+    /* ===================================================
+       FIX MENÚ DESPLEGABLE (Streamlit + Emotion)
+    ====================================================*/
     .st-emotion-cache-qiev7j,
     .st-emotion-cache-qiev7j * {
         color: #000000 !important;
@@ -149,26 +180,22 @@ st.markdown(
 def load_cost_table():
     """
     Lee el Excel de precios de insumos y devuelve
-    solo las columnas importantes:
+    solo las columnas que nos interesan.
     - PROVEEDOR
     - insumos
-    - Costo unitario  (S/ por kg)
+    - Costo unitario (S/ por kg)
     """
-    # Asegúrate de que este nombre de archivo exista en tu repo
+    # Ajusta el nombre del archivo si es diferente en tu repo
     df = pd.read_excel("Precio de insumos.xlsx", header=1)
     df = df[["PROVEEDOR", "insumos", "Costo unitario"]].dropna()
-
     df = df.rename(columns={
         "PROVEEDOR": "proveedor",
         "insumos": "insumo",
         "Costo unitario": "costo_soles_kg"
     })
-
-    # Columna normalizada para buscar por nombre
-    df["insumo_norm"] = df["insumo"].astype(str).str.strip().str.lower()
+    df["insumo_norm"] = df["insumo"].str.strip().str.lower()
     return df
 
-# DataFrame global de precios
 df_precios = load_cost_table()
 
 # ============================
@@ -235,50 +262,191 @@ if st.session_state.paso == 2:
 if st.session_state.paso == 3:
     st.markdown('<p class="step-title">Paso 3: Selección de ingredientes</p>', unsafe_allow_html=True)
 
-    st.markdown('<p class="sub">Macronutrientes — Proteínas</p>', unsafe_allow_html=True)
-    proteinas = ["Aislado de arveja", "Aislado de suero de leche", "Proteína de arroz"]
-    seleccion_proteinas = []
+    ingredientes_seleccionados = []
+
+    # -------------------------
+    # Fuentes de proteínas
+    # -------------------------
+    st.markdown('<p class="sub">Fuentes de proteínas</p>', unsafe_allow_html=True)
+    proteinas = [
+        "Proteína de arveja",
+        "Proteína suero de leche",
+        "Proteína aislada de arroz",
+        "Proteína de colágeno hidrolizado",
+        "Calostro bovino",
+    ]
     for p in proteinas:
-        if st.checkbox(p):
-            seleccion_proteinas.append(p)
+        if st.checkbox(p, key=f"prot_{p}"):
+            ingredientes_seleccionados.append(p)
 
     st.session_state.protein_pct = st.number_input(
         "Porcentaje de proteína (%)",
         min_value=0,
         max_value=90,
         step=1,
+        value=st.session_state.protein_pct,
     )
 
-    st.markdown('<p class="sub">Macronutrientes — Carbohidratos</p>', unsafe_allow_html=True)
-    carbs = ["Maca", "Quinua", "Cañihua", "Tarwi", "Acelga", "Chía", "Linaza"]
-    seleccion_carbs = [c for c in carbs if st.checkbox(c, key=f"carb_{c}")]
+    # -------------------------
+    # Fuentes de grasas
+    # -------------------------
+    st.markdown('<p class="sub">Fuentes de grasas</p>', unsafe_allow_html=True)
+    grasas = [
+        "Aceite de coco en polvo",
+        "Aceite de girasol en polvo",
+        "ARA",
+        "DHA (Omega-3)",
+        "Lecitina de soya en polvo",
+    ]
+    for g in grasas:
+        if st.checkbox(g, key=f"fat_{g}"):
+            ingredientes_seleccionados.append(g)
 
-    st.markdown('<p class="sub">Macronutrientes — Grasas</p>', unsafe_allow_html=True)
-    grasas = ["Aceite de coco", "Aceite de girasol", "Sacha Inchi", "Linaza", "Chía", "Aguacate", "Oliva", "Cañamo"]
-    seleccion_grasas = [g for g in grasas if st.checkbox(g, key=f"grasa_{g}")]
-
-    st.markdown('<p class="sub">Micronutrientes — Vitaminas</p>', unsafe_allow_html=True)
-    vitaminas = ["Vitamina A", "Vitamina B1", "Vitamina B2", "Vitamina B3"]
-    seleccion_vit = [v for v in vitaminas if st.checkbox(v, key=f"vit_{v}")]
-
-    st.markdown('<p class="sub">Micronutrientes — Minerales</p>', unsafe_allow_html=True)
-    minerales = ["Calcio", "Hierro", "Magnesio", "Fósforo", "Potasio", "Sodio", "Zinc", "Yodo", "Selenio", "Cobre"]
-    seleccion_min = []
-    for m in minerales:
-        if st.checkbox(m, key=f"min_{m}"):
-            seleccion_min.append(m)
-
-    st.session_state.iron_pct = st.number_input(
-        "Porcentaje de hierro (%)",
+    st.session_state.fat_pct = st.number_input(
+        "Porcentaje de grasas (%)",
         min_value=0,
         max_value=90,
         step=1,
+        value=st.session_state.fat_pct,
     )
 
-    st.session_state.ingredientes = (
-        seleccion_proteinas + seleccion_carbs + seleccion_grasas + seleccion_vit + seleccion_min
+    # -------------------------
+    # Fuentes de carbohidratos (Superalimentos)
+    # -------------------------
+    st.markdown('<p class="sub">Fuentes de carbohidratos — Selección de Superalimentos</p>', unsafe_allow_html=True)
+    superalimentos = [
+        "Algarrobo en polvo",
+        "Arándano rojo",
+        "Banano verde en polvo",
+        "Betaglucano 70%",
+        "Cacao en polvo",
+        "Café instantáneo",
+        "Camu camu atomizado",
+        "Espirulina",
+        "Extracto de ciruela",
+        "Extracto de limón",
+        "Extracto de manzanilla",
+        "Extracto de naranja",
+        "Extracto de naranja agria",
+        "Extracto de tamarindo",
+        "Extracto de té verde 40%",
+        "Extracto de Zen",
+        "Ganoderma",
+        "Garcinia cambogia",
+        "Maca en polvo",
+        "Quinua en polvo",
+        "Yacón en polvo",
+        "Curcumina (extracto de cúrcuma)",
+    ]
+    for c in superalimentos:
+        if st.checkbox(c, key=f"carb_{c}"):
+            ingredientes_seleccionados.append(c)
+
+    st.session_state.carb_pct = st.number_input(
+        "Porcentaje de carbohidrato (%)",
+        min_value=0,
+        max_value=90,
+        step=1,
+        value=st.session_state.carb_pct,
     )
 
+    # -------------------------
+    # Micronutrientes — Vitaminas
+    # -------------------------
+    st.markdown('<p class="sub">Selección de Micronutrientes — Vitaminas</p>', unsafe_allow_html=True)
+    vitaminas = [
+        "Vitamina A",
+        "Vitamina C (ácido ascórbico)",
+        "Vitamina D",
+        "Vitamina E",
+        "Vitamina K",
+        "Mix Vitaminas del complejo B (B1, B2, B3, B5, B6, B7, B9, B12)",
+        "Vitamina B1",
+        "Vitamina B6",
+        "Vitamina B12",
+        "Mix vitamínico GK02",
+    ]
+    for v in vitaminas:
+        if st.checkbox(v, key=f"vit_{v}"):
+            ingredientes_seleccionados.append(v)
+
+    # -------------------------
+    # Micronutrientes — Minerales
+    # -------------------------
+    st.markdown('<p class="sub">Selección de Micronutrientes — Minerales</p>', unsafe_allow_html=True)
+    minerales = [
+        "Hierro (bisglicinato ferroso)",
+        "Hierro (lactoferrina)",
+        "Carbonato de calcio",
+        "Fosfato tricálcico",
+        "Citrato de magnesio",
+        "Citrato de potasio",
+        "Glicinato de zinc",
+    ]
+    for m in minerales:
+        if st.checkbox(m, key=f"min_{m}"):
+            ingredientes_seleccionados.append(m)
+
+    # -------------------------
+    # Selección de Aminoácidos
+    # -------------------------
+    st.markdown('<p class="sub">Selección de Aminoácidos</p>', unsafe_allow_html=True)
+    aminoacidos = [
+        "Triptófano",
+        "L-Carnitina",
+        "L-Glutamina",
+        "L-Glicina",
+        "L-Taurina",
+        "L-Cisteína",
+        "L-Metionina",
+        "L-Arginina",
+    ]
+    for a in aminoacidos:
+        if st.checkbox(a, key=f"aa_{a}"):
+            ingredientes_seleccionados.append(a)
+
+    # -------------------------
+    # Selección de Prebióticos
+    # -------------------------
+    st.markdown('<p class="sub">Selección de Prebióticos</p>', unsafe_allow_html=True)
+    prebioticos = [
+        "Polidextrosa",
+        "FOS",
+        "Inulina",
+    ]
+    for pre in prebioticos:
+        if st.checkbox(pre, key=f"pre_{pre}"):
+            ingredientes_seleccionados.append(pre)
+
+    st.session_state.fiber_pct = st.number_input(
+        "Porcentaje de fibra (%)",
+        min_value=0,
+        max_value=90,
+        step=1,
+        value=st.session_state.fiber_pct,
+    )
+
+    # -------------------------
+    # Selección de Probióticos
+    # -------------------------
+    st.markdown('<p class="sub">Selección de Probióticos</p>', unsafe_allow_html=True)
+    probioticos = [
+        "Bacillus coagulans SNZ1969",
+        "Lactobacillus acidophilus LA-G80",
+        "Bifidobacterium bifidum BB-G90",
+        "Bifidobacterium longum subsp. longum BL-G301",
+        "Lactiplantibacillus plantarum ZJUF T34",
+        "Lactiplantibacillus plantarum Lp-G18",
+        "Lactiplantibacillus plantarum YS1",
+    ]
+    for pr in probioticos:
+        if st.checkbox(pr, key=f"pro_{pr}"):
+            ingredientes_seleccionados.append(pr)
+
+    # Guardar ingredientes en sesión
+    st.session_state.ingredientes = ingredientes_seleccionados
+
+    # Navegación
     col1, col2 = st.columns(2)
     with col1:
         st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 2}))
@@ -287,18 +455,18 @@ if st.session_state.paso == 3:
     st.stop()
 
 # ============================
-#  FUNCIÓN DE PRECIOS DESDE EXCEL
+#  PASO 4 — PARÁMETROS ORGANOLEPTICOS
 # ============================
 def obtener_precio_desde_excel(nombre_ingrediente: str):
     """
-    Devuelve (precio_kg, fuente):
-      - precio_kg: float (S/ por kg) si se encontró en el Excel
-      - fuente: 'tabla' si viene del Excel, 'estimado' si no se encontró
+    Devuelve (precio_kg, fuente) donde:
+      - precio_kg es un float en soles/kg si se encontró en el Excel
+      - fuente es 'tabla' si viene del Excel, o 'estimado' si no se encontró
     """
-    if df_precios is None or df_precios.empty:
+    if df_precios is None:
         return None, "estimado"
 
-    nombre_norm = str(nombre_ingrediente).strip().lower()
+    nombre_norm = nombre_ingrediente.strip().lower()
 
     try:
         coincidencias = df_precios[df_precios["insumo_norm"] == nombre_norm]
@@ -310,19 +478,35 @@ def obtener_precio_desde_excel(nombre_ingrediente: str):
             precio = float(coincidencias["costo_soles_kg"].iloc[0])
             return precio, "tabla"
         except Exception:
-            return None, "estimado"
+            pass
 
     return None, "estimado"
 
-# ============================
-#  PASO 4 — PARÁMETROS ORGANOLEPTICOS
-# ============================
+
 if st.session_state.paso == 4:
     st.header("Paso 4: Parámetros organolépticos")
 
-    saborizantes = ["Vainilla", "Cacao", "Frutos deshidratados", "Especias", "Menta", "Cítricos", "Café"]
-    endulzantes = ["Eritritol (E968)", "Stevia (E960)", "Sucralosa"]
-    estabilizantes = ["Goma Xantana", "Goma Guar", "Pectina", "Goma de Tara"]
+    # Saborizantes
+    saborizantes = [
+        "Sabor a cereza",
+        "Sabor arándano",
+        "Sabor cereza",
+        "Sabor fresa",
+        "Sabor frutos rojos",
+        "Sabor leche",
+        "Sabor limón",
+        "Sabor menta",
+        "Sabor naranja",
+        "Sabor vainilla",
+    ]
+
+    # Estabilizantes
+    estabilizantes = [
+        "Goma Xantana",
+        "Goma Guar",
+        "Pectina",
+        "Goma de Tara",
+    ]
 
     organo = []
 
@@ -331,11 +515,6 @@ if st.session_state.paso == 4:
         if st.checkbox(s, key=f"org_s_{s}"):
             organo.append(s)
 
-    st.subheader("Endulzantes")
-    for e in endulzantes:
-        if st.checkbox(e, key=f"org_e_{e}"):
-            organo.append(e)
-
     st.subheader("Estabilizantes")
     for e in estabilizantes:
         if st.checkbox(e, key=f"org_est_{e}"):
@@ -343,7 +522,9 @@ if st.session_state.paso == 4:
 
     st.session_state.organolepticos = organo
 
-    # ---- texto de costos por ingrediente ----
+    # ------------------------------------
+    # Construir texto de costos por ingrediente
+    # ------------------------------------
     lineas_costos = []
     for ing in st.session_state.ingredientes:
         precio, fuente = obtener_precio_desde_excel(ing)
@@ -359,15 +540,19 @@ if st.session_state.paso == 4:
 
     texto_costos = "\n".join(lineas_costos)
 
-    # ---- Prompt automático ----
+    # ------------------------------------
+    # Prompt automático para la IA
+    # ------------------------------------
     default_prompt = (
         f"Genera una formulación nutricional completa usando los siguientes datos:\n\n"
         f"País objetivo: {st.session_state.pais}\n"
         f"Categoría del producto: {st.session_state.categoria}\n"
         f"Ingredientes seleccionados: {st.session_state.ingredientes}\n"
-        f"Proteína requerida (%): {st.session_state.protein_pct}\n"
-        f"Hierro requerido (%): {st.session_state.iron_pct}\n"
-        f"Parámetros organolépticos (saborizantes, endulzantes, estabilizantes): "
+        f"Porcentaje de proteína (%): {st.session_state.protein_pct}\n"
+        f"Porcentaje de grasas (%): {st.session_state.fat_pct}\n"
+        f"Porcentaje de carbohidrato (%): {st.session_state.carb_pct}\n"
+        f"Porcentaje de fibra (%): {st.session_state.fiber_pct}\n"
+        f"Parámetros organolépticos (saborizantes y estabilizantes): "
         f"{st.session_state.organolepticos}\n\n"
         f"Información de costos (soles por kg):\n"
         f"{texto_costos}\n\n"
@@ -383,8 +568,11 @@ if st.session_state.paso == 4:
 
     prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=280)
 
+    # ---------- llamada a OpenAI ----------
     def call_ai(prompt):
         try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
