@@ -32,7 +32,6 @@ if "ingredientes" not in st.session_state:
 if "micro_ingredientes" not in st.session_state:
     st.session_state.micro_ingredientes = []
 
-# Porcentajes de macros
 if "protein_pct" not in st.session_state:
     st.session_state.protein_pct = 0
 
@@ -141,9 +140,7 @@ st.markdown("""
         color: white !important;
     }
 
-    /* ===================================================
-       FIX MENÚ DESPLEGABLE (Streamlit + Emotion)
-    ====================================================*/
+    /* Opciones reales de algunos menús desplegables (portales de Streamlit) */
     .st-emotion-cache-qiev7j,
     .st-emotion-cache-qiev7j * {
         color: #000000 !important;
@@ -181,11 +178,8 @@ def load_cost_table():
     """
     Lee el Excel de precios de insumos y devuelve
     solo las columnas que nos interesan.
-    - PROVEEDOR
-    - insumos
-    - Costo unitario (S/ por kg)
     """
-    # Ajusta el nombre del archivo si es diferente en tu repo
+    # Ajusta el nombre del archivo si es necesario
     df = pd.read_excel("Precio de insumos.xlsx", header=1)
     df = df[["PROVEEDOR", "insumos", "Costo unitario"]].dropna()
     df = df.rename(columns={
@@ -193,10 +187,35 @@ def load_cost_table():
         "insumos": "insumo",
         "Costo unitario": "costo_soles_kg"
     })
-    df["insumo_norm"] = df["insumo"].str.strip().str.lower()
+    df["insumo_norm"] = df["insumo"].astype(str).str.strip().str.lower()
     return df
 
-df_precios = load_cost_table()
+cost_df = load_cost_table()
+
+def obtener_precio_desde_excel(nombre_ingrediente: str):
+    """
+    Devuelve (precio_kg, fuente) donde:
+      - precio_kg es un float en soles/kg si se encontró en el Excel
+      - fuente es 'tabla' si viene del Excel, o 'estimado' si no se encontró
+    """
+    if cost_df is None or cost_df.empty:
+        return None, "estimado"
+
+    nombre_norm = nombre_ingrediente.strip().lower()
+
+    try:
+        coincidencias = cost_df[cost_df["insumo_norm"] == nombre_norm]
+    except Exception:
+        return None, "estimado"
+
+    if not coincidencias.empty:
+        try:
+            precio = float(coincidencias["costo_soles_kg"].iloc[0])
+            return precio, "tabla"
+        except Exception:
+            return None, "estimado"
+
+    return None, "estimado"
 
 # ============================
 #      LOGIN
@@ -227,9 +246,23 @@ if st.session_state.paso == 1:
 
     st.session_state.pais = st.selectbox("Seleccione el país:", ["Perú", "Colombia", "México"])
 
-    col1, _ = st.columns(2)
-    with col1:
-        st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 2}))
+    # Solo Perú puede avanzar. Colombia y México muestran "Próximamente".
+    if st.session_state.pais == "Perú":
+        col1, _ = st.columns(2)
+        with col1:
+            st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 2}))
+    else:
+        st.markdown(
+            """
+            <div style="text-align:center; margin-top:40px;">
+                <span style="font-size:32px; font-weight:900;">
+                    Próximamente
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
     st.stop()
 
 # ============================
@@ -238,16 +271,22 @@ if st.session_state.paso == 1:
 if st.session_state.paso == 2:
     st.markdown('<p class="step-title">Paso 2: Categoría del producto</p>', unsafe_allow_html=True)
 
-    categorias = [
-        "Mezcla en polvo",
-        "Bebidas",
-        "Snacks",
-        "Suplementos nutricionales",
-        "Productos lácteos",
-        "Productos congelados",
-    ]
+    # Solo se puede elegir "Mezcla en polvo"
+    st.session_state.categoria = st.radio(
+        "Seleccione una categoría (actualmente solo disponible Mezcla en polvo):",
+        ["Mezcla en polvo"],
+        index=0
+    )
 
-    st.session_state.categoria = st.radio("Seleccione una categoría:", categorias)
+    # Mostrar las otras categorías como texto informativo "Próximamente"
+    st.markdown("""
+    **Otras categorías (no disponibles aún):**
+    - Bebidas (Próximamente)
+    - Snacks (Próximamente)
+    - Suplementos nutricionales (Próximamente)
+    - Productos lácteos (Próximamente)
+    - Productos congelados (Próximamente)
+    """)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -264,18 +303,16 @@ if st.session_state.paso == 3:
 
     ingredientes_seleccionados = []
 
-    # -------------------------
-    # Fuentes de proteínas
-    # -------------------------
-    st.markdown('<p class="sub">Fuentes de proteínas</p>', unsafe_allow_html=True)
-    proteinas = [
+    # ===== Fuentes de proteínas =====
+    st.markdown("### Fuentes de proteínas")
+    prot_opts = [
         "Proteína de arveja",
         "Proteína suero de leche",
         "Proteína aislada de arroz",
         "Proteína de colágeno hidrolizado",
         "Calostro bovino",
     ]
-    for p in proteinas:
+    for p in prot_opts:
         if st.checkbox(p, key=f"prot_{p}"):
             ingredientes_seleccionados.append(p)
 
@@ -284,21 +321,18 @@ if st.session_state.paso == 3:
         min_value=0,
         max_value=90,
         step=1,
-        value=st.session_state.protein_pct,
     )
 
-    # -------------------------
-    # Fuentes de grasas
-    # -------------------------
-    st.markdown('<p class="sub">Fuentes de grasas</p>', unsafe_allow_html=True)
-    grasas = [
+    # ===== Fuentes de grasas =====
+    st.markdown("### Fuentes de grasas")
+    fat_opts = [
         "Aceite de coco en polvo",
         "Aceite de girasol en polvo",
         "ARA",
         "DHA (Omega-3)",
         "Lecitina de soya en polvo",
     ]
-    for g in grasas:
+    for g in fat_opts:
         if st.checkbox(g, key=f"fat_{g}"):
             ingredientes_seleccionados.append(g)
 
@@ -307,14 +341,11 @@ if st.session_state.paso == 3:
         min_value=0,
         max_value=90,
         step=1,
-        value=st.session_state.fat_pct,
     )
 
-    # -------------------------
-    # Fuentes de carbohidratos (Superalimentos)
-    # -------------------------
-    st.markdown('<p class="sub">Fuentes de carbohidratos — Selección de Superalimentos</p>', unsafe_allow_html=True)
-    superalimentos = [
+    # ===== Fuentes de carbohidratos / Superalimentos =====
+    st.markdown("### Fuentes de carbohidratos - Selección de Superalimentos")
+    carb_opts = [
         "Algarrobo en polvo",
         "Arándano rojo",
         "Banano verde en polvo",
@@ -338,7 +369,7 @@ if st.session_state.paso == 3:
         "Yacón en polvo",
         "Curcumina (extracto de cúrcuma)",
     ]
-    for c in superalimentos:
+    for c in carb_opts:
         if st.checkbox(c, key=f"carb_{c}"):
             ingredientes_seleccionados.append(c)
 
@@ -347,14 +378,11 @@ if st.session_state.paso == 3:
         min_value=0,
         max_value=90,
         step=1,
-        value=st.session_state.carb_pct,
     )
 
-    # -------------------------
-    # Micronutrientes — Vitaminas
-    # -------------------------
-    st.markdown('<p class="sub">Selección de Micronutrientes — Vitaminas</p>', unsafe_allow_html=True)
-    vitaminas = [
+    # ===== Micronutrientes - Vitaminas =====
+    st.markdown("### Selección de Micronutrientes - Vitaminas")
+    vit_opts = [
         "Vitamina A",
         "Vitamina C (ácido ascórbico)",
         "Vitamina D",
@@ -366,15 +394,13 @@ if st.session_state.paso == 3:
         "Vitamina B12",
         "Mix vitamínico GK02",
     ]
-    for v in vitaminas:
+    for v in vit_opts:
         if st.checkbox(v, key=f"vit_{v}"):
             ingredientes_seleccionados.append(v)
 
-    # -------------------------
-    # Micronutrientes — Minerales
-    # -------------------------
-    st.markdown('<p class="sub">Selección de Micronutrientes — Minerales</p>', unsafe_allow_html=True)
-    minerales = [
+    # ===== Micronutrientes - Minerales =====
+    st.markdown("### Selección de Micronutrientes - Minerales")
+    min_opts = [
         "Hierro (bisglicinato ferroso)",
         "Hierro (lactoferrina)",
         "Carbonato de calcio",
@@ -383,15 +409,13 @@ if st.session_state.paso == 3:
         "Citrato de potasio",
         "Glicinato de zinc",
     ]
-    for m in minerales:
+    for m in min_opts:
         if st.checkbox(m, key=f"min_{m}"):
             ingredientes_seleccionados.append(m)
 
-    # -------------------------
-    # Selección de Aminoácidos
-    # -------------------------
-    st.markdown('<p class="sub">Selección de Aminoácidos</p>', unsafe_allow_html=True)
-    aminoacidos = [
+    # ===== Aminoácidos =====
+    st.markdown("### Selección de Aminoácidos")
+    amino_opts = [
         "Triptófano",
         "L-Carnitina",
         "L-Glutamina",
@@ -401,20 +425,18 @@ if st.session_state.paso == 3:
         "L-Metionina",
         "L-Arginina",
     ]
-    for a in aminoacidos:
-        if st.checkbox(a, key=f"aa_{a}"):
+    for a in amino_opts:
+        if st.checkbox(a, key=f"amino_{a}"):
             ingredientes_seleccionados.append(a)
 
-    # -------------------------
-    # Selección de Prebióticos
-    # -------------------------
-    st.markdown('<p class="sub">Selección de Prebióticos</p>', unsafe_allow_html=True)
-    prebioticos = [
+    # ===== Prebióticos =====
+    st.markdown("### Selección de Prebióticos")
+    pre_opts = [
         "Polidextrosa",
         "FOS",
         "Inulina",
     ]
-    for pre in prebioticos:
+    for pre in pre_opts:
         if st.checkbox(pre, key=f"pre_{pre}"):
             ingredientes_seleccionados.append(pre)
 
@@ -423,14 +445,11 @@ if st.session_state.paso == 3:
         min_value=0,
         max_value=90,
         step=1,
-        value=st.session_state.fiber_pct,
     )
 
-    # -------------------------
-    # Selección de Probióticos
-    # -------------------------
-    st.markdown('<p class="sub">Selección de Probióticos</p>', unsafe_allow_html=True)
-    probioticos = [
+    # ===== Probióticos =====
+    st.markdown("### Selección de Probióticos")
+    probio_opts = [
         "Bacillus coagulans SNZ1969",
         "Lactobacillus acidophilus LA-G80",
         "Bifidobacterium bifidum BB-G90",
@@ -439,14 +458,13 @@ if st.session_state.paso == 3:
         "Lactiplantibacillus plantarum Lp-G18",
         "Lactiplantibacillus plantarum YS1",
     ]
-    for pr in probioticos:
-        if st.checkbox(pr, key=f"pro_{pr}"):
+    for pr in probio_opts:
+        if st.checkbox(pr, key=f"probio_{pr}"):
             ingredientes_seleccionados.append(pr)
 
-    # Guardar ingredientes en sesión
+    # Guardamos todos los ingredientes seleccionados
     st.session_state.ingredientes = ingredientes_seleccionados
 
-    # Navegación
     col1, col2 = st.columns(2)
     with col1:
         st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 2}))
@@ -457,36 +475,11 @@ if st.session_state.paso == 3:
 # ============================
 #  PASO 4 — PARÁMETROS ORGANOLEPTICOS
 # ============================
-def obtener_precio_desde_excel(nombre_ingrediente: str):
-    """
-    Devuelve (precio_kg, fuente) donde:
-      - precio_kg es un float en soles/kg si se encontró en el Excel
-      - fuente es 'tabla' si viene del Excel, o 'estimado' si no se encontró
-    """
-    if df_precios is None:
-        return None, "estimado"
-
-    nombre_norm = nombre_ingrediente.strip().lower()
-
-    try:
-        coincidencias = df_precios[df_precios["insumo_norm"] == nombre_norm]
-    except Exception:
-        return None, "estimado"
-
-    if not coincidencias.empty:
-        try:
-            precio = float(coincidencias["costo_soles_kg"].iloc[0])
-            return precio, "tabla"
-        except Exception:
-            pass
-
-    return None, "estimado"
-
-
 if st.session_state.paso == 4:
     st.header("Paso 4: Parámetros organolépticos")
 
-    # Saborizantes
+    # ===== Saborizantes =====
+    st.subheader("Saborizantes")
     saborizantes = [
         "Sabor a cereza",
         "Sabor arándano",
@@ -500,24 +493,16 @@ if st.session_state.paso == 4:
         "Sabor vainilla",
     ]
 
-    # Estabilizantes
-    estabilizantes = [
-        "Goma Xantana",
-        "Goma Guar",
-        "Pectina",
-        "Goma de Tara",
-    ]
-
     organo = []
-
-    st.subheader("Saborizantes")
     for s in saborizantes:
-        if st.checkbox(s, key=f"org_s_{s}"):
+        if st.checkbox(s, key=f"sabor_{s}"):
             organo.append(s)
 
+    # ===== Estabilizantes =====
     st.subheader("Estabilizantes")
+    estabilizantes = ["Goma Xantana", "Goma Guar", "Pectina", "Goma de Tara"]
     for e in estabilizantes:
-        if st.checkbox(e, key=f"org_est_{e}"):
+        if st.checkbox(e, key=f"estab_{e}"):
             organo.append(e)
 
     st.session_state.organolepticos = organo
@@ -548,10 +533,10 @@ if st.session_state.paso == 4:
         f"País objetivo: {st.session_state.pais}\n"
         f"Categoría del producto: {st.session_state.categoria}\n"
         f"Ingredientes seleccionados: {st.session_state.ingredientes}\n"
-        f"Porcentaje de proteína (%): {st.session_state.protein_pct}\n"
-        f"Porcentaje de grasas (%): {st.session_state.fat_pct}\n"
-        f"Porcentaje de carbohidrato (%): {st.session_state.carb_pct}\n"
-        f"Porcentaje de fibra (%): {st.session_state.fiber_pct}\n"
+        f"Proteína requerida (%): {st.session_state.protein_pct}\n"
+        f"Grasas requeridas (%): {st.session_state.fat_pct}\n"
+        f"Carbohidratos requeridos (%): {st.session_state.carb_pct}\n"
+        f"Fibra requerida (%): {st.session_state.fiber_pct}\n"
         f"Parámetros organolépticos (saborizantes y estabilizantes): "
         f"{st.session_state.organolepticos}\n\n"
         f"Información de costos (soles por kg):\n"
@@ -571,9 +556,9 @@ if st.session_state.paso == 4:
     # ---------- llamada a OpenAI ----------
     def call_ai(prompt):
         try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            client_local = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-            response = client.chat.completions.create(
+            response = client_local.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "Eres un experto formulador de alimentos y costos."},
