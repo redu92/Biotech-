@@ -43,93 +43,131 @@ if "organolepticos" not in st.session_state:
 if "ai_response" not in st.session_state:
     st.session_state.ai_response = None
 
-# ============================
-#       ESTILOS (CSS)
-# ============================
-st.markdown(
-    """
-    <style>
-    /* Fondo general azul y tipografía blanca en bold */
-    html, body, [class^="stApp"] {
+# ==========================================
+#   CSS PERSONALIZADO (DISEÑO COMPLETO)
+# ==========================================
+st.markdown("""
+<style>
+
+    /* ============================
+       COLORES BASE
+    ============================*/
+    body, .main, .block-container {
         background-color: #5947fd !important;
     }
-    .stApp {
-        background-color: #5947fd !important;
+
+    /* ============================
+       TIPOGRAFÍA GENERAL
+    ============================*/
+    * {
         color: #ffffff !important;
         font-weight: 700 !important;
     }
 
-    /* Títulos */
-    .title {
-        color: #ffffff;
-        font-size: 32px;
-        font-weight: 800;
-    }
-
-    .step-title {
-        color: #ffffff;
-        font-size: 26px;
-        font-weight: 800;
-        margin-top: 20px;
-    }
-
-    .sub {
-        color: #ffffff;
-        font-size: 20px;
-        font-weight: 800;
-        margin-top: 10px;
-    }
-
-    /* Tarjeta principal (centrar contenido un poco más angosto) */
-    .main > div {
-        padding-top: 0rem;
-    }
-
-    /* Inputs generales: fondo blanco + texto negro */
-    textarea, input, select, .stTextInput input, .stNumberInput input {
+    /* ============================
+       INPUTS Y TEXTAREAS (texto negro)
+    ============================*/
+    input, textarea, select, div[role="textbox"] {
+        color: #000000 !important;
         background-color: #ffffff !important;
-        color: #000000 !important;
         font-weight: 600 !important;
+        border-radius: 8px !important;
     }
 
-    /* Selectbox del país (Paso 1) – asegurar texto negro */
-    div[data-baseweb="select"] * {
-        color: #000000 !important;
+    /* ============================
+       SELECTBOX — texto del select cerrado
+    ============================*/
+    div[data-baseweb="select"] > div {
+        color: #ffffff !important;
+        background-color: #5947fd !important;
     }
 
-    /* Textarea del prompt (Paso 4) – texto negro sobre fondo blanco */
-    textarea {
-        color: #000000 !important;
+    /* ============================
+       CHECKBOX Y RADIO
+    ============================*/
+    div[data-baseweb="checkbox"] > div {
+        background-color: transparent !important;
+        border: 2px solid #ffffff !important;
+    }
+    div[data-baseweb="checkbox"] svg,
+    div[data-baseweb="radio"] svg {
+        fill: #00a0ff !important;
     }
 
-    /* Botones */
-    .stButton > button {
-        background-color: #ffffff;
-        color: #5947fd;
+    /* ============================
+       BOTONES
+    ============================*/
+    .stButton button {
+        background-color: #1d1e1c !important;
+        color: white !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+        padding: 10px 18px !important;
+        border: none !important;
+    }
+    .stButton button:hover {
+        background-color: #000000 !important;
+        transform: scale(1.02);
+    }
+
+    /* ============================
+       CABECERA CON LOGO
+    ============================*/
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 15px 20px;
+        background-color: #1d1e1c;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        border: 2px solid white;
+    }
+    .header-logo {
+        height: 70px;
         border-radius: 8px;
-        font-weight: 800;
-        border: none;
-        padding: 0.4rem 1.4rem;
     }
-    .stButton > button:hover {
-        background-color: #e0ddff;
-        color: #5947fd;
+    .header-title {
+        font-size: 32px;
+        font-weight: 900 !important;
+        color: white !important;
     }
 
-    /* Checkboxes en azul */
-    div[data-baseweb="checkbox"] svg {
-        stroke: #ffffff !important;
+    /* ===================================================
+       FIX REAL Y DEFINITIVO PARA TU MENÚ DESPLEGABLE
+       (Streamlit usa portales + clases Emotion)
+    ====================================================*/
+
+    /* Opciones reales del menú (clase Emotion detectada) */
+    .st-emotion-cache-qiev7j,
+    .st-emotion-cache-qiev7j * {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: 700 !important;
     }
-    div[data-baseweb="checkbox"] rect {
-        stroke: #ffffff !important;
+
+    /* Cualquier menú desplegable renderizado en un portal */
+    div[role="dialog"] div[class*="st-emotion-cache"] {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+        font-weight: 700 !important;
     }
-    div[data-baseweb="checkbox"] path {
-        fill: #5947fd !important;
-    }
-    </style>
+
+</style>
+""", unsafe_allow_html=True)
+# ==========================================
+#  HEADER CON LOGO — SIEMPRE VISIBLE
+# ==========================================
+st.markdown(
+    f"""
+    <div class="header-container">
+        <img src="https://raw.githubusercontent.com/redu92/Biotech-/main/logo%20biotech.jpg" class="header-logo">
+        <div class="header-title">BiotechSuperfood IA</div>
+    </div>
     """,
-    unsafe_allow_html=True,
+    unsafe_allow_html=True
 )
+
 
 # ============================
 #      LOGIN
