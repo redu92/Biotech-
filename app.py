@@ -314,15 +314,12 @@ if st.session_state.paso == 3:
         st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 4}))
     st.stop()
 
-  # ============================
-# PASO 4 — PARÁMETROS ORGANOLEPTICOS (MEJORADO)
+ # ============================
+#  PASO 4 — PARÁMETROS ORGANOLEPTICOS + PRECIOS
 # ============================
 if st.session_state.paso == 4:
     st.header("Paso 4: Parámetros organolépticos")
 
-    # --------------------------
-    # 1. Selección organoléptica
-    # --------------------------
     saborizantes = ["Vainilla", "Cacao", "Frutos deshidratados", "Especias", "Menta", "Cítricos", "Café"]
     endulzantes = ["Eritritol (E968)", "Stevia (E960)", "Sucralosa"]
     estabilizantes = ["Goma Xantana", "Goma Guar", "Pectina", "Goma de Tara"]
@@ -346,83 +343,109 @@ if st.session_state.paso == 4:
 
     st.session_state.organolepticos = organo
 
-    # ------------------------------------------
-    # 2. PREPARAR LISTA DE INGREDIENTES CON COSTO
-    # ------------------------------------------
+    # ============================
+    #   ARMAR LISTA DE PRECIOS SEGÚN INGREDIENTES SELECCIONADOS
+    # ============================
+    precios_ingredientes = []
 
-    # Normalizar lista de ingredientes seleccionados
-    ingredientes_usuario = [ing.lower().strip() for ing in st.session_state.ingredientes]
+    if df_precios is not None:
+        for ing in st.session_state.ingredientes:
+            ing_norm = str(ing).strip().lower()
 
-    lista_ingredientes_detallada = []
+            match = df_precios[df_precios["insumo_norm"] == ing_norm]
 
-    for ing in ingredientes_usuario:
-        # Buscar en DF por nombre normalizado
-        match = df_precios[df_precios["insumo_norm"] == ing]
-
-        if not match.empty:
-            costo = float(match.iloc[0]["costo_unitario"])
-            proveedor = match.iloc[0]["proveedor"]
-            lista_ingredientes_detallada.append(
-                f"{ing} (precio real: {costo} soles/kg, proveedor: {proveedor})"
+            if not match.empty:
+                fila = match.iloc[0]
+                precios_ingredientes.append(
+                    {
+                        "insumo": ing,
+                        "insumo_tabla": fila["insumo"],
+                        "proveedor": fila["proveedor"],
+                        "costo_unitario_soles_kg": float(fila["costo_unitario"]),
+                        "origen_precio": "tabla_excel",
+                    }
+                )
+            else:
+                # ingrediente no está en la tabla: precio a estimar por la IA
+                precios_ingredientes.append(
+                    {
+                        "insumo": ing,
+                        "insumo_tabla": None,
+                        "proveedor": None,
+                        "costo_unitario_soles_kg": None,
+                        "origen_precio": "a_estimar_por_IA",
+                    }
+                )
+    else:
+        # Si no se pudo cargar el Excel, todos los precios deben ser estimados
+        for ing in st.session_state.ingredientes:
+            precios_ingredientes.append(
+                {
+                    "insumo": ing,
+                    "insumo_tabla": None,
+                    "proveedor": None,
+                    "costo_unitario_soles_kg": None,
+                    "origen_precio": "a_estimar_por_IA",
+                }
             )
-        else:
-            lista_ingredientes_detallada.append(
-                f"{ing} (precio NO disponible — estimalo tú con valores actuales del mercado)"
-            )
 
-    # ------------------------------------------
-    # 3. CREAR PROMPT COMPLETO PARA OPENAI
-    # ------------------------------------------
+    precios_json = json.dumps(precios_ingredientes, ensure_ascii=False, indent=2)
+
+    # ============================
+    #   PROMPT PARA OPENAI
+    # ============================
+    st.subheader("Prompt enviado a la IA")
 
     default_prompt = f"""
-Eres un formulador experto en alimentos.
+Eres un experto formulador de alimentos funcionales.
 
-Usa los siguientes datos del usuario para generar una formulación nutricional completa:
+Tienes la siguiente información del producto a formular:
 
-PAÍS:
-- {st.session_state.pais}
+- País objetivo: {st.session_state.pais}
+- Categoría de producto: {st.session_state.categoria}
+- Lista de ingredientes seleccionados: {st.session_state.ingredientes}
+- Porcentaje objetivo de proteína: {st.session_state.protein_pct} %
+- Porcentaje objetivo de hierro: {st.session_state.iron_pct} %
+- Parámetros organolépticos (saborizantes, endulzantes, estabilizantes): {st.session_state.organolepticos}
 
-CATEGORÍA:
-- {st.session_state.categoria}
+Además, cuentas con esta tabla de precios reales por kg en soles (cuando exista información):
 
-INGREDIENTES SELECCIONADOS (con precio si existe en la base de datos):
-{chr(10).join(f"- {x}" for x in lista_ingredientes_detallada)}
+{precios_json}
 
-REQUERIMIENTOS NUTRICIONALES:
-- Proteína requerida: {st.session_state.protein_pct}%
-- Hierro requerido: {st.session_state.iron_pct}%
+Instrucciones para usar la tabla de precios:
 
-PARÁMETROS ORGANOLEPTICOS:
-{chr(10).join(f"- {x}" for x in st.session_state.organolepticos)}
+1. Si "costo_unitario_soles_kg" NO es nulo, úsalo como precio real del ingrediente.
+2. Si "costo_unitario_soles_kg" es nulo, estima un precio unitario razonable en soles por kg
+   basándote en tu conocimiento general del mercado actual. Señala claramente qué precios son estimados.
+3. Usa siempre el país objetivo para adaptar precios y disponibilidad de insumos.
 
-INSTRUCCIONES:
-1. Si un ingrediente tiene precio real (indicado arriba), úsalo como costo oficial.
-2. Si un ingrediente NO tiene precio, estima su costo basándote en precios promedio del mercado actual en el país seleccionado.
-3. Genera una formulación completa (ingredientes + porcentajes exactos).
-4. Calcula el costo final por cada 100 g usando los precios reales + estimados.
-5. Genera una tabla nutricional para 100 g y por porción de 3.5 g.
-6. Explica por qué elegiste la combinación final.
-    """.strip()
+Con toda esta información:
 
-    prompt_input = st.text_area("Prompt enviado a la IA", default_prompt, height=300)
+- Propón una formulación completa (ingredientes y porcentaje en 100 g).
+- Calcula el costo total estimado por 100 g y por porción de 3.5 g.
+- Genera una tabla nutricional aproximada por 100 g y por porción de 3.5 g
+  (energía, proteína, grasas totales, saturadas, trans, carbohidratos, azúcares, sodio).
+- Explica brevemente por qué elegiste cada ingrediente clave.
+- Incluye una breve nota final indicando qué precios se tomaron de la tabla y cuáles son estimados.
+"""
 
-    # ------------------------------------------
-    # 4. LLAMAR A OPENAI
-    # ------------------------------------------
+    prompt_input = st.text_area("Puedes editar el prompt si lo deseas:", default_prompt, height=300)
 
-    from openai import OpenAI
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
-    def call_ai(prompt):
+    # ============================
+    #   LLAMADA A OPENAI
+    # ============================
+    def call_openai(prompt: str):
         try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "Eres un experto formulador de alimentos con conocimiento de costos reales."},
-                    {"role": "user", "content": prompt}
+                    {"role": "system", "content": "Eres un experto formulador de alimentos en Latinoamérica."},
+                    {"role": "user", "content": prompt},
                 ],
                 max_tokens=2000,
-                temperature=0.3
+                temperature=0.35,
             )
 
             st.session_state.ai_response = response.choices[0].message.content
@@ -432,8 +455,10 @@ INSTRUCCIONES:
             st.error(f"Error al llamar a OpenAI: {e}")
 
     if st.button("Generar formulación con IA"):
-        with st.spinner("Generando formulación…"):
-            call_ai(prompt_input)
+        with st.spinner("Generando formulación con OpenAI..."):
+            call_openai(prompt_input)
+
+    st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
 
     st.stop()
 # ============================
