@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from openai import OpenAI
+import pandas as pd
 
 # ============================
 #   CONFIGURACIÓN GENERAL
@@ -168,6 +169,28 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ============================
+#   CARGA DE TABLA DE COSTOS
+# ============================
+@st.cache_data
+def load_cost_table():
+    """
+    Lee el Excel de precios de insumos y devuelve
+    solo las columnas que nos interesan.
+    - PROVEEDOR
+    - insumos
+    - Costo unitario (S/ por kg)
+    """
+    df = pd.read_excel("Precio de insumos.xlsx", header=1)  # ajusta ruta si está en /data
+    df = df[["PROVEEDOR", "insumos", "Costo unitario"]].dropna()
+    df = df.rename(columns={
+        "PROVEEDOR": "proveedor",
+        "insumos": "insumo",
+        "Costo unitario": "costo_soles_kg"
+    })
+    return df
+
+cost_df = load_cost_table()
 
 # ============================
 #      LOGIN
@@ -290,12 +313,11 @@ if st.session_state.paso == 3:
     with col2:
         st.button("Siguiente", on_click=lambda: st.session_state.update({"paso": 4}))
     st.stop()
-
 # ============================
-# PASO 4 — PARÁMETROS ORGANOLEPTICOS + IA
+#  PASO 4 — PARÁMETROS ORGANOLEPTICOS
 # ============================
 if st.session_state.paso == 4:
-    st.markdown('<p class="step-title">Paso 4: Parámetros organolépticos</p>', unsafe_allow_html=True)
+    st.header("Paso 4: Parámetros organolépticos")
 
     saborizantes = ["Vainilla", "Cacao", "Frutos deshidratados", "Especias", "Menta", "Cítricos", "Café"]
     endulzantes = ["Eritritol (E968)", "Stevia (E960)", "Sucralosa"]
@@ -303,69 +325,96 @@ if st.session_state.paso == 4:
 
     organo = []
 
-    st.markdown("### Saborizantes")
+    st.subheader("Saborizantes")
     for s in saborizantes:
         if st.checkbox(s, key=f"org_s_{s}"):
             organo.append(s)
 
-    st.markdown("### Endulzantes")
+    st.subheader("Endulzantes")
     for e in endulzantes:
         if st.checkbox(e, key=f"org_e_{e}"):
             organo.append(e)
 
-    st.markdown("### Estabilizantes")
+    st.subheader("Estabilizantes")
     for e in estabilizantes:
         if st.checkbox(e, key=f"org_est_{e}"):
             organo.append(e)
 
     st.session_state.organolepticos = organo
 
-    # Prompt por defecto para la IA
+    # ============================
+    #  FILTRAR TABLA DE COSTOS POR INGREDIENTES SELECCIONADOS
+    # ============================
+    seleccion = [ing.lower() for ing in st.session_state.ingredientes]
+
+    costos_seleccionados = cost_df[
+        cost_df["insumo"].str.lower().isin(seleccion)
+    ].copy()
+
+    # Construimos un texto tipo tabla para el prompt
+    if not costos_seleccionados.empty:
+        tabla_costos_text = "Insumo | Proveedor | Costo_soles_por_kg\n"
+        for _, row in costos_seleccionados.iterrows():
+            tabla_costos_text += f"{row['insumo']} | {row['proveedor']} | {row['costo_soles_kg']}\\n"
+    else:
+        tabla_costos_text = "NO SE ENCONTRARON PRECIOS PARA LOS INSUMOS SELECCIONADOS.\n"
+
+    # ============================
+    #  PROMPT POR DEFECTO A LA IA
+    # ============================
     default_prompt = (
-        "Genera una formulación nutricional completa usando los siguientes datos:\n\n"
+        f"Eres un experto formulador de alimentos.\n\n"
+        f"Usa la siguiente información para proponer una formulación de un producto en polvo:\n\n"
         f"País: {st.session_state.pais}\n"
-        f"Categoría del producto: {st.session_state.categoria}\n"
+        f"Categoría de producto: {st.session_state.categoria}\n"
         f"Ingredientes seleccionados: {st.session_state.ingredientes}\n"
         f"Proteína requerida (%): {st.session_state.protein_pct}\n"
         f"Hierro requerido (%): {st.session_state.iron_pct}\n"
         f"Parámetros organolépticos: {st.session_state.organolepticos}\n\n"
-        "Usa precios y disponibilidad promedio del país seleccionado.\n"
-        "Devuelve:\n"
-        "- Una formulación final (ingredientes + porcentajes)\n"
-        "- Costo estimado por 100 g\n"
-        "- Tabla nutricional completa (por 100 g y por porción de 3.5 g)\n"
-        "- Explicación de por qué se eligieron esos ingredientes."
+        f"La siguiente tabla contiene los COSTOS UNITARIOS REALES (en soles por kg) "
+        f"de cada insumo, por proveedor:\n\n"
+        f"{tabla_costos_text}\n"
+        f"Reglas importantes:\n"
+        f"- Usa SOLO estos precios para calcular los costos de la formulación.\n"
+        f"- Si algún ingrediente no aparece en la tabla, dilo explícitamente y no inventes su precio.\n"
+        f"- Trabaja con un peso total de 100 g de producto final.\n\n"
+        f"Tu salida debe incluir:\n"
+        f"1) La formulación detallada (ingrediente, porcentaje, gramos en 100 g).\n"
+        f"2) El costo estimado por 100 g, usando los precios de la tabla.\n"
+        f"3) Costo estimado por kg.\n"
+        f"4) Una tabla nutricional aproximada basada en la formulación.\n"
+        f"5) Comentarios sobre qué proveedor conviene para cada insumo.\n"
     )
 
-    prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=260)
+    prompt_input = st.text_area("Prompt enviado a la IA:", default_prompt, height=300)
 
-    # ----------- FUNCIÓN OPENAI -------------
-    def call_openai(prompt: str):
+    # ============================
+    #  LLAMADA A OPENAI
+    # ============================
+    def call_ai(prompt: str):
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[
-                    {
-                        "role": "system",
-                        "content": "Eres un experto formulador de alimentos funcionales y suplementos.",
-                    },
+                    {"role": "system", "content": "Eres un experto formulador de alimentos y analista de costos."},
                     {"role": "user", "content": prompt},
                 ],
-                max_tokens=1500,
-                temperature=0.35,
+                max_tokens=2000,
+                temperature=0.3,
             )
             st.session_state.ai_response = response.choices[0].message.content
             st.session_state.paso = 5
         except Exception as e:
-            st.error(f"Error al llamar a OpenAI:\n\n{e}")
+            st.error(f"Error al llamar a OpenAI: {e}")
 
-    if st.button("Generar formulación con IA"):
-        with st.spinner("Generando formulación con OpenAI..."):
-            call_openai(prompt_input)
+    if st.button("Generar fórmula con IA"):
+        with st.spinner("Generando formulación con IA..."):
+            call_ai(prompt_input)
 
     st.button("Atrás", on_click=lambda: st.session_state.update({"paso": 3}))
-    st.stop()
 
+    st.stop()
+    
 # ============================
 # PASO 5 — RESULTADOS FINALES
 # ============================
